@@ -46,11 +46,11 @@ const footerLinks = {
     { label: "Partners", href: "/#partners" },
   ],
   Platform: [
-    { label: "AI Planner Tools", href: "/ai-tools" },
-    { label: "AI Meal Generator", href: "/ai-tools#meal-planner" },
-    { label: "AI Workout Creator", href: "/ai-tools#workout-planner" },
-    { label: "Biometric Analyzer", href: "/ai-tools#biometrics" },
-    { label: "Capabilities", href: "/services" },
+    { label: "Meet Our AI Engine", href: "/meet-our-ai" },
+    { label: "AI Meal Blueprint", href: "/meet-our-ai#meal-planner" },
+    { label: "AI Workout Creator", href: "/meet-our-ai#workout-planner" },
+    { label: "Biometric Fat Analyzer", href: "/meet-our-ai#biometrics" },
+    { label: "AI Neural Coach Chat", href: "/meet-our-ai#ai-coach" },
   ],
   Support: [
     { label: "FAQ", href: "/#faq" },
