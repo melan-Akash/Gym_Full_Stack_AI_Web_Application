@@ -813,15 +813,15 @@ export default function ServicesPage() {
                     </div>
 
                     <div className="flex items-center gap-4 flex-wrap">
-                      <div className="p-3 bg-white/5 border border-white/10 rounded-lg text-center min-w-[90px]">
+                      <div className="p-3 bg-white/5 border border-white/10 rounded-lg text-center min-w-22.5">
                         <span className="text-xs text-slate-400 font-semibold uppercase block">Protein</span>
                         <span className="text-xl font-black text-[#d7ff2f]">{generatedMealPlan.protein}g</span>
                       </div>
-                      <div className="p-3 bg-white/5 border border-white/10 rounded-lg text-center min-w-[90px]">
+                      <div className="p-3 bg-white/5 border border-white/10 rounded-lg text-center min-w-22.5">
                         <span className="text-xs text-slate-400 font-semibold uppercase block">Carbs</span>
                         <span className="text-xl font-black text-[#00f2fe]">{generatedMealPlan.carbs}g</span>
                       </div>
-                      <div className="p-3 bg-white/5 border border-white/10 rounded-lg text-center min-w-[90px]">
+                      <div className="p-3 bg-white/5 border border-white/10 rounded-lg text-center min-w-22.5">
                         <span className="text-xs text-slate-400 font-semibold uppercase block">Fats</span>
                         <span className="text-xl font-black text-white">{generatedMealPlan.fat}g</span>
                       </div>
