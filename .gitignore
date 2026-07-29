@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+client/node_modules/
+.pnp
+.pnp.*
+
+# Next.js build output
+.next/
+client/.next/
+out/
+client/out/
+build/
+client/build/
+
+# misc
+.DS_Store
+*.pem
+*.log
+
+# env files
+.env*
+!.env.example
+
+# vercel
+.vercel
