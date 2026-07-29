@@ -66,7 +66,14 @@ export default function Navbar() {
           </ul>
 
           {/* Glass CTA */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              href="/login"
+              className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-300 hover:text-[#d7ff2f] transition-colors cursor-pointer"
+              style={{ fontFamily: "Space Grotesk, sans-serif" }}
+            >
+              Sign In
+            </Link>
             <motion.a
               href="/#pricing"
               whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(215,255,47,0.5)" }}
