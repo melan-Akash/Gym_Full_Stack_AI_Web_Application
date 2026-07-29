@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { ToastContainer } from "react-toast-msg";
+import AiChatWidget from "@/components/ui/AiChatWidget";
 
 export const metadata: Metadata = {
   title: "FORGED | Elite Athletic & Performance Center",
@@ -36,6 +37,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ToastContainer />
         {children}
+        <AiChatWidget />
       </body>
     </html>
   );
