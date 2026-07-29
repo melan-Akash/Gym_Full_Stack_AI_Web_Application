@@ -195,7 +195,7 @@ export default function DashboardPage() {
             </aside>
 
             {/* Main Content Area */}
-            <main className="col-span-1 lg:col-span-9 bg-[#111] p-6 sm:p-10 rounded-2xl border border-white/15 min-h-[650px] shadow-2xl">
+            <main className="col-span-1 lg:col-span-9 bg-[#111] p-6 sm:p-10 rounded-2xl border border-white/15 min-h-162.5 shadow-2xl">
               {/* TAB 1: MAIN DASHBOARD OVERVIEW */}
               {activeTab === "dashboard" && (
                 <div className="space-y-8 animate-fadeIn">
