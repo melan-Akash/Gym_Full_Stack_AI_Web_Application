@@ -46,11 +46,11 @@ const footerLinks = {
     { label: "Partners", href: "/#partners" },
   ],
   Platform: [
+    { label: "AI Planner Tools", href: "/ai-tools" },
+    { label: "AI Meal Generator", href: "/ai-tools#meal-planner" },
+    { label: "AI Workout Creator", href: "/ai-tools#workout-planner" },
+    { label: "Biometric Analyzer", href: "/ai-tools#biometrics" },
     { label: "Capabilities", href: "/services" },
-    { label: "Force & Velocity", href: "/services#capabilities" },
-    { label: "Restoration Suite", href: "/services#modalities" },
-    { label: "Process & Blueprint", href: "/services#process" },
-    { label: "Service FAQs", href: "/services#faq" },
   ],
   Support: [
     { label: "FAQ", href: "/#faq" },
