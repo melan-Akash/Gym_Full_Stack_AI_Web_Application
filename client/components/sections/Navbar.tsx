@@ -68,8 +68,15 @@ export default function Navbar() {
           {/* Glass CTA */}
           <div className="hidden md:flex items-center gap-3">
             <Link
+              href="/dashboard"
+              className="px-4 py-2 bg-white/5 border border-[#d7ff2f]/40 hover:bg-[#d7ff2f] hover:text-[#0b0b0b] text-[#d7ff2f] text-xs font-black uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+              style={{ fontFamily: "Space Grotesk, sans-serif" }}
+            >
+              Dashboard
+            </Link>
+            <Link
               href="/login"
-              className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-300 hover:text-[#d7ff2f] transition-colors cursor-pointer"
+              className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-300 hover:text-white transition-colors cursor-pointer"
               style={{ fontFamily: "Space Grotesk, sans-serif" }}
             >
               Sign In
