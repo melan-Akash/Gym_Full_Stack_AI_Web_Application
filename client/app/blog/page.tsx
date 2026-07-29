@@ -184,7 +184,7 @@ export default function BlogListingPage() {
                   </Link>
 
                   {/* Article Author Footer */}
-                  <div className="px-6 pb-6 pt-0 flex items-center justify-between border-t border-white/10 mt-auto pt-4">
+                  <div className="px-6 pb-6 flex items-center justify-between border-t border-white/10 mt-auto pt-4">
                     <div className="flex items-center gap-3">
                       <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#d7ff2f]/30">
                         <Image
