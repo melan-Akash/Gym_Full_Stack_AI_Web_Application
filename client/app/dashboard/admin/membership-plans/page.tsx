@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAppContext } from "@/context/appcontext";
 import { MEMBERSHIP_PLANS } from "@/lib/adminData";
-import { CreditCard, Check, Plus, Edit2, X, CheckCircle2 } from "lucide-react";
+import { CreditCard, Check, Plus, Edit2, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function AdminMembershipPlansPage() {
   const { adminGetMembershipPlans, adminCreateMembershipPlan } = useAppContext();
@@ -12,13 +13,11 @@ export default function AdminMembershipPlansPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Form State
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState(99);
   const [billingPeriod, setBillingPeriod] = useState("Monthly");
   const [featureInput, setFeatureInput] = useState("Unlimited Access, Sauna & Plunge");
   const [isPopular, setIsPopular] = useState(false);
-  const [successMsg, setSuccessMsg] = useState(false);
 
   const fetchPlans = async () => {
     try {
@@ -48,17 +47,16 @@ export default function AdminMembershipPlansPage() {
       });
 
       setLoading(false);
-      setSuccessMsg(true);
+      toast.success(`Plan "${title}" saved to MongoDB database!`, {
+        icon: "⚡",
+      });
       fetchPlans();
 
-      setTimeout(() => {
-        setSuccessMsg(false);
-        setModalOpen(false);
-        setTitle("");
-      }, 1500);
+      setModalOpen(false);
+      setTitle("");
     } catch (err: any) {
       setLoading(false);
-      alert(err.message || "Failed to create plan");
+      toast.error(err.message || "Failed to create plan");
     }
   };
 
@@ -140,66 +138,59 @@ export default function AdminMembershipPlansPage() {
               </button>
             </div>
 
-            {successMsg ? (
-              <div className="text-center py-6 space-y-2">
-                <CheckCircle2 size={40} className="text-[#00f2fe] mx-auto animate-bounce" />
-                <h4 className="text-sm font-bold text-white">Plan Created in MongoDB!</h4>
+            <form onSubmit={handleCreatePlan} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-300 font-bold uppercase mb-1">Plan Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Executive Performance"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
+                />
               </div>
-            ) : (
-              <form onSubmit={handleCreatePlan} className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-slate-300 font-bold uppercase mb-1">Plan Title</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Executive Performance"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-slate-300 font-bold uppercase mb-1">Price ($)</label>
-                  <input
-                    type="number"
-                    required
-                    value={price}
-                    onChange={(e) => setPrice(Number(e.target.value))}
-                    className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
-                  />
-                </div>
+              <div>
+                <label className="block text-slate-300 font-bold uppercase mb-1">Price ($)</label>
+                <input
+                  type="number"
+                  required
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-slate-300 font-bold uppercase mb-1">Features (Comma Separated)</label>
-                  <input
-                    type="text"
-                    value={featureInput}
-                    onChange={(e) => setFeatureInput(e.target.value)}
-                    className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
-                  />
-                </div>
+              <div>
+                <label className="block text-slate-300 font-bold uppercase mb-1">Features (Comma Separated)</label>
+                <input
+                  type="text"
+                  value={featureInput}
+                  onChange={(e) => setFeatureInput(e.target.value)}
+                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
+                />
+              </div>
 
-                <label className="flex items-center gap-2 text-slate-300 cursor-pointer pt-1">
-                  <input
-                    type="checkbox"
-                    checked={isPopular}
-                    onChange={(e) => setIsPopular(e.target.checked)}
-                    className="rounded text-[#00f2fe]"
-                  />
-                  Mark as Most Popular Tier
-                </label>
+              <label className="flex items-center gap-2 text-slate-300 cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  checked={isPopular}
+                  onChange={(e) => setIsPopular(e.target.checked)}
+                  className="rounded text-[#00f2fe]"
+                />
+                Mark as Most Popular Tier
+              </label>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 bg-[#00f2fe] text-[#0b0b0b] font-black text-xs uppercase rounded-lg hover:bg-[#00d0e0] transition-all cursor-pointer mt-2"
-                  style={{ fontFamily: "Space Grotesk, sans-serif" }}
-                >
-                  {loading ? "Creating..." : "Save Plan to MongoDB"}
-                </button>
-              </form>
-            )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-[#00f2fe] text-[#0b0b0b] font-black text-xs uppercase rounded-lg hover:bg-[#00d0e0] transition-all cursor-pointer mt-2"
+                style={{ fontFamily: "Space Grotesk, sans-serif" }}
+              >
+                {loading ? "Creating..." : "Save Plan to MongoDB"}
+              </button>
+            </form>
           </div>
         </div>
       )}

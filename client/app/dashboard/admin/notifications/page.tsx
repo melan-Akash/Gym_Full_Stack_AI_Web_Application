@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAppContext } from "@/context/appcontext";
 import { SYSTEM_NOTIFICATIONS } from "@/lib/adminData";
-import { Megaphone, Send, CheckCircle2 } from "lucide-react";
+import { Megaphone, Send } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function AdminNotificationsPage() {
   const { adminGetNotifications, adminCreateNotification } = useAppContext();
@@ -13,7 +14,6 @@ export default function AdminNotificationsPage() {
   const [message, setMessage] = useState("");
   const [audience, setAudience] = useState("All Members");
   const [loading, setLoading] = useState(false);
-  const [sentSuccess, setSentSuccess] = useState(false);
 
   const fetchNotifs = async () => {
     try {
@@ -43,15 +43,15 @@ export default function AdminNotificationsPage() {
       });
 
       setLoading(false);
-      setSentSuccess(true);
+      toast.success("Broadcast sent to all athlete app feeds!", {
+        icon: "📢",
+      });
       fetchNotifs();
       setTitle("");
       setMessage("");
-
-      setTimeout(() => setSentSuccess(false), 2000);
     } catch (err: any) {
       setLoading(false);
-      alert(err.message || "Failed to broadcast notification");
+      toast.error(err.message || "Failed to broadcast notification");
     }
   };
 
@@ -116,7 +116,7 @@ export default function AdminNotificationsPage() {
               style={{ fontFamily: "Space Grotesk, sans-serif" }}
             >
               <Send size={15} />
-              {loading ? "Sending to MongoDB..." : sentSuccess ? "Broadcast Saved to DB!" : "Send Broadcast Now"}
+              {loading ? "Broadcasting..." : "Send Broadcast Now"}
             </button>
           </form>
         </div>

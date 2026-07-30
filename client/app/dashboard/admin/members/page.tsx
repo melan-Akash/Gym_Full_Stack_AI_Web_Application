@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useAppContext } from "@/context/appcontext";
 import { ADMIN_MEMBERS } from "@/lib/adminData";
 import { Search, UserPlus, ChevronRight, CheckCircle2, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function AdminMembersPage() {
   const { adminGetMembers, adminCreateMember, adminUpdateMemberStatus } = useAppContext();
@@ -21,7 +22,6 @@ export default function AdminMembersPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [membershipTier, setMembershipTier] = useState("Pro Performance");
-  const [createSuccess, setCreateSuccess] = useState(false);
 
   const fetchMembers = async () => {
     try {
@@ -50,19 +50,18 @@ export default function AdminMembersPage() {
       });
 
       setLoading(false);
-      setCreateSuccess(true);
+      toast.success(`Member "${name}" saved to MongoDB database!`, {
+        icon: "⚡",
+      });
       fetchMembers();
 
-      setTimeout(() => {
-        setCreateSuccess(false);
-        setModalOpen(false);
-        setName("");
-        setEmail("");
-        setPhone("");
-      }, 1500);
+      setModalOpen(false);
+      setName("");
+      setEmail("");
+      setPhone("");
     } catch (err: any) {
       setLoading(false);
-      alert(err.message || "Failed to create member");
+      toast.error(err.message || "Failed to create member");
     }
   };
 
@@ -70,9 +69,10 @@ export default function AdminMembersPage() {
     const nextStatus = currentStatus === "Active" ? "Suspended" : "Active";
     try {
       await adminUpdateMemberStatus(id, nextStatus);
+      toast.success(`Member status changed to ${nextStatus.toUpperCase()}`);
       fetchMembers();
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      toast.error(err.message || "Status update failed");
     }
   };
 
@@ -200,71 +200,64 @@ export default function AdminMembersPage() {
               </button>
             </div>
 
-            {createSuccess ? (
-              <div className="text-center py-6 space-y-2">
-                <CheckCircle2 size={40} className="text-[#00f2fe] mx-auto animate-bounce" />
-                <h4 className="text-sm font-bold text-white">Member Saved to MongoDB!</h4>
+            <form onSubmit={handleAddMember} className="space-y-3 text-xs">
+              <div>
+                <label className="block text-slate-300 font-bold uppercase mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Kaushani Fernando"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
+                />
               </div>
-            ) : (
-              <form onSubmit={handleAddMember} className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-slate-300 font-bold uppercase mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Kaushani Fernando"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-slate-300 font-bold uppercase mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="kaushani@gmail.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
-                  />
-                </div>
+              <div>
+                <label className="block text-slate-300 font-bold uppercase mb-1">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="kaushani@gmail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-slate-300 font-bold uppercase mb-1">Phone Number</label>
-                  <input
-                    type="text"
-                    placeholder="+94 77 123 4567"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
-                  />
-                </div>
+              <div>
+                <label className="block text-slate-300 font-bold uppercase mb-1">Phone Number</label>
+                <input
+                  type="text"
+                  placeholder="+94 77 123 4567"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]"
+                />
+              </div>
 
-                <div>
-                  <label className="block text-slate-300 font-bold uppercase mb-1">Membership Plan</label>
-                  <select
-                    value={membershipTier}
-                    onChange={(e) => setMembershipTier(e.target.value)}
-                    className="w-full bg-[#1e2230] border border-white/15 rounded-lg px-3 py-2 text-white"
-                  >
-                    <option value="Basic Access">Basic Access ($49/mo)</option>
-                    <option value="Pro Performance">Pro Performance ($99/mo)</option>
-                    <option value="VIP Elite Athlete">VIP Elite Athlete ($199/mo)</option>
-                  </select>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 bg-[#00f2fe] text-[#0b0b0b] font-black text-xs uppercase rounded-lg hover:bg-[#00d0e0] transition-all cursor-pointer mt-2"
-                  style={{ fontFamily: "Space Grotesk, sans-serif" }}
+              <div>
+                <label className="block text-slate-300 font-bold uppercase mb-1">Membership Plan</label>
+                <select
+                  value={membershipTier}
+                  onChange={(e) => setMembershipTier(e.target.value)}
+                  className="w-full bg-[#1e2230] border border-white/15 rounded-lg px-3 py-2 text-white"
                 >
-                  {loading ? "Saving to Database..." : "Save & Create Account"}
-                </button>
-              </form>
-            )}
+                  <option value="Basic Access">Basic Access ($49/mo)</option>
+                  <option value="Pro Performance">Pro Performance ($99/mo)</option>
+                  <option value="VIP Elite Athlete">VIP Elite Athlete ($199/mo)</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-[#00f2fe] text-[#0b0b0b] font-black text-xs uppercase rounded-lg hover:bg-[#00d0e0] transition-all cursor-pointer mt-2"
+                style={{ fontFamily: "Space Grotesk, sans-serif" }}
+              >
+                {loading ? "Saving to Database..." : "Save & Create Account"}
+              </button>
+            </form>
           </div>
         </div>
       )}

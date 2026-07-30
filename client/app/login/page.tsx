@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Lock, Mail, ShieldCheck, Eye, EyeOff, User as UserIcon, UserCheck, ShieldAlert, Sparkles, AlertCircle } from "lucide-react";
 import { useAppContext } from "@/context/appcontext";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,11 +26,13 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // Call AppContext login which communicates with http://localhost:5000/api/auth/login
       const loggedUser = await login(email, password);
-
       setLoading(false);
-      // Route based on authenticated user role
+
+      toast.success(`Welcome back, ${loggedUser.name}! Accessing ${loggedUser.role.toUpperCase()} workspace.`, {
+        icon: "⚡",
+      });
+
       if (loggedUser.role === "admin") {
         router.push("/dashboard/admin");
       } else if (loggedUser.role === "trainer") {
@@ -39,7 +42,9 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       setLoading(false);
-      setErrorMessage(err.message || "Invalid login credentials. Please try again.");
+      const msg = err.message || "Invalid login credentials. Please try again.";
+      setErrorMessage(msg);
+      toast.error(msg);
     }
   };
 
@@ -48,7 +53,6 @@ export default function LoginPage() {
     setErrorMessage(null);
     setError(null);
 
-    // Default demo credentials corresponding to role
     let demoEmail = "athlete@forged.com";
     if (targetRole === "admin") demoEmail = "admin@forgedgym.com";
     if (targetRole === "trainer") demoEmail = "marcus@forgedgym.com";
@@ -56,6 +60,7 @@ export default function LoginPage() {
     try {
       const loggedUser = await login(demoEmail, "password123");
       setLoading(false);
+      toast.success(`Demo Access: Logged in as ${targetRole.toUpperCase()}`);
       if (loggedUser.role === "admin" || targetRole === "admin") {
         router.push("/dashboard/admin");
       } else if (loggedUser.role === "trainer" || targetRole === "trainer") {
@@ -64,8 +69,8 @@ export default function LoginPage() {
         router.push("/dashboard");
       }
     } catch (err) {
-      // Fallback demo redirect if backend isn't seeded with demo credentials yet
       setLoading(false);
+      toast.success(`Demo Access: Navigating to ${targetRole.toUpperCase()} Dashboard`);
       if (targetRole === "admin") {
         router.push("/dashboard/admin");
       } else if (targetRole === "trainer") {
@@ -92,7 +97,6 @@ export default function LoginPage() {
             <div className="absolute inset-0 bg-linear-to-tr from-[#0b0b0b] via-[#0b0b0b]/70 to-transparent" />
           </div>
 
-          {/* Logo Top Left */}
           <div className="relative z-10">
             <Link href="/" className="inline-block">
               <Image
@@ -105,7 +109,6 @@ export default function LoginPage() {
             </Link>
           </div>
 
-          {/* Bottom Quote & Stats */}
           <div className="relative z-10 max-w-lg space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#d7ff2f]/15 border border-[#d7ff2f]/40 rounded-md text-xs font-black uppercase text-[#d7ff2f]">
               <ShieldCheck size={14} />
@@ -140,10 +143,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Right Side - Form & Role Selection */}
+        {/* Right Side */}
         <div className="col-span-1 lg:col-span-6 flex items-center justify-center p-6 sm:p-12 bg-[#1e2230] relative overflow-y-auto">
           <div className="w-full max-w-md space-y-7 my-auto">
-            {/* Mobile Logo Header */}
             <div className="lg:hidden flex items-center justify-between mb-4">
               <Link href="/">
                 <Image
@@ -171,7 +173,6 @@ export default function LoginPage() {
               </p>
             </div>
 
-            {/* Error Notification Badge */}
             {(errorMessage || contextError) && (
               <div className="bg-red-500/15 border border-red-500/40 text-red-400 p-3.5 rounded-xl text-xs flex items-center gap-2.5">
                 <AlertCircle size={16} className="shrink-0" />
@@ -179,7 +180,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Quick Demo Access Bar */}
             <div className="bg-white/5 border border-[#d7ff2f]/30 rounded-2xl p-4 space-y-3 shadow-inner">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black uppercase tracking-wider text-[#d7ff2f] flex items-center gap-1.5">
@@ -219,7 +219,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Role Switcher Tabs */}
             <div className="space-y-1">
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                 Account Type
@@ -270,7 +269,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Login Form */}
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">

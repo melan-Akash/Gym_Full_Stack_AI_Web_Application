@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Inter, Space_Grotesk } from "next/font/google";
-import { ToastContainer } from "react-toast-msg";
+import { Toaster } from "react-hot-toast";
 import AiChatWidget from "@/components/ui/AiChatWidget";
 import { AppProvider } from "@/context/appcontext";
 
@@ -37,7 +37,36 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <body className="antialiased">
         <AppProvider>
-          <ToastContainer />
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: "#141722",
+                color: "#ffffff",
+                border: "1px solid rgba(0, 242, 254, 0.3)",
+                borderRadius: "12px",
+                fontSize: "13px",
+                fontWeight: "600",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+              },
+              success: {
+                iconTheme: {
+                  primary: "#00f2fe",
+                  secondary: "#0b0b0b",
+                },
+              },
+              error: {
+                style: {
+                  border: "1px solid rgba(239, 68, 68, 0.4)",
+                },
+                iconTheme: {
+                  primary: "#ef4444",
+                  secondary: "#ffffff",
+                },
+              },
+            }}
+          />
           {children}
           <AiChatWidget />
         </AppProvider>

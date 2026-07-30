@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useAppContext } from "@/context/appcontext";
-import { QrCode, CheckCircle2 } from "lucide-react";
+import { QrCode } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function AdminAttendancePage() {
   const { adminGetAttendance, adminRecordCheckIn } = useAppContext();
 
   const [logs, setLogs] = useState<any[]>([]);
   const [scanning, setScanning] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const fetchAttendance = async () => {
     try {
@@ -30,12 +30,13 @@ export default function AdminAttendancePage() {
     try {
       await adminRecordCheckIn(undefined, "Mobile App QR");
       setScanning(false);
-      setSuccess(true);
+      toast.success("Gate Scanner Check-In Recorded in MongoDB!", {
+        icon: "🎟️",
+      });
       fetchAttendance();
-      setTimeout(() => setSuccess(false), 2000);
-    } catch (err) {
+    } catch (err: any) {
       setScanning(false);
-      alert("Check-in failed");
+      toast.error(err.message || "Check-in failed");
     }
   };
 
@@ -52,18 +53,11 @@ export default function AdminAttendancePage() {
         <button
           onClick={handleSimulateCheckIn}
           disabled={scanning}
-          className="px-5 py-2.5 bg-[#00f2fe] text-[#0b0b0b] font-black text-xs uppercase tracking-wider rounded-xl hover:bg-[#00d0e0] flex items-center gap-2 cursor-pointer"
+          className="px-5 py-2.5 bg-[#00f2fe] text-[#0b0b0b] font-black text-xs uppercase tracking-wider rounded-xl hover:bg-[#00d0e0] flex items-center gap-2 cursor-pointer transition-all"
         >
           <QrCode size={16} /> {scanning ? "Scanning Gate..." : "Simulate Scanner Check-in"}
         </button>
       </div>
-
-      {/* Success Badge */}
-      {success && (
-        <div className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 p-4 rounded-xl flex items-center gap-2 text-xs font-bold animate-bounce">
-          <CheckCircle2 size={18} /> New Gate Check-in Saved to MongoDB Database!
-        </div>
-      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
