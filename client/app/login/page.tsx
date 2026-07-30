@@ -4,10 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Lock, Mail, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Lock, Mail, ShieldCheck, Eye, EyeOff, User, UserCheck, ShieldAlert, Sparkles } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [role, setRole] = useState<"member" | "trainer" | "admin">("trainer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,9 +19,28 @@ export default function LoginPage() {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
-      // Redirect user to onboarding questionnaire
-      router.push("/onboarding");
-    }, 700);
+      if (role === "admin") {
+        router.push("/dashboard/admin");
+      } else if (role === "trainer") {
+        router.push("/dashboard/trainer");
+      } else {
+        router.push("/dashboard");
+      }
+    }, 600);
+  };
+
+  const quickDemoLogin = (targetRole: "member" | "trainer" | "admin") => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      if (targetRole === "admin") {
+        router.push("/dashboard/admin");
+      } else if (targetRole === "trainer") {
+        router.push("/dashboard/trainer");
+      } else {
+        router.push("/dashboard");
+      }
+    }, 400);
   };
 
   return (
@@ -56,7 +76,7 @@ export default function LoginPage() {
           <div className="relative z-10 max-w-lg space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#d7ff2f]/15 border border-[#d7ff2f]/40 rounded-md text-xs font-black uppercase text-[#d7ff2f]">
               <ShieldCheck size={14} />
-              Verified Athlete Portal
+              Unified FORGED Portal (Client / Trainer / Admin)
             </div>
 
             <h2
@@ -67,7 +87,7 @@ export default function LoginPage() {
             </h2>
 
             <p className="text-slate-300 text-sm leading-relaxed font-normal">
-              &ldquo;FORGED isn&apos;t just a gym; it&apos;s an ecosystem built for those who demand daily physical excellence.&rdquo;
+              Access your personalized control center. Whether managing gym operations as Admin, sculpting client plans as Trainer, or tracking PRs as Member.
             </p>
 
             <div className="flex items-center gap-6 pt-4 border-t border-white/15">
@@ -75,23 +95,23 @@ export default function LoginPage() {
                 <span className="text-2xl font-black text-[#d7ff2f] block" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
                   5,000+
                 </span>
-                <span className="text-xs text-slate-400 uppercase font-semibold">Athletes</span>
+                <span className="text-xs text-slate-400 uppercase font-semibold">Active Members</span>
               </div>
               <div>
                 <span className="text-2xl font-black text-[#00f2fe] block" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-                  24/7
+                  12 Elite
                 </span>
-                <span className="text-xs text-slate-400 uppercase font-semibold">Key Fob Access</span>
+                <span className="text-xs text-slate-400 uppercase font-semibold">Head Trainers</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Side - Luxury Form */}
-        <div className="col-span-1 lg:col-span-6 flex items-center justify-center p-6 sm:p-12 bg-[#1e2230] relative">
-          <div className="w-full max-w-md space-y-8">
+        {/* Right Side - Form & Role Selection */}
+        <div className="col-span-1 lg:col-span-6 flex items-center justify-center p-6 sm:p-12 bg-[#1e2230] relative overflow-y-auto">
+          <div className="w-full max-w-md space-y-7 my-auto">
             {/* Mobile Logo Header */}
-            <div className="lg:hidden flex items-center justify-between mb-6">
+            <div className="lg:hidden flex items-center justify-between mb-4">
               <Link href="/">
                 <Image
                   width={297}
@@ -104,8 +124,8 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <span className="text-[#d7ff2f] text-xs font-bold tracking-[0.25em] uppercase mb-2 block font-heading">
-                Welcome Back
+              <span className="text-[#d7ff2f] text-xs font-bold tracking-[0.25em] uppercase mb-1 block font-heading">
+                Portal Sign In
               </span>
               <h1
                 className="text-3xl sm:text-4xl font-black uppercase text-white tracking-tight"
@@ -113,31 +133,120 @@ export default function LoginPage() {
               >
                 Sign In To <span className="text-[#d7ff2f]">FORGED</span>
               </h1>
-              <p className="text-slate-300 text-sm mt-1 font-normal">
-                Access your training logs, AI meal plans, and biometric stats.
+              <p className="text-slate-300 text-xs mt-1 font-normal">
+                Select your account role below to access your dedicated workspace.
               </p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-5">
+            {/* Quick Demo Access Bar */}
+            <div className="bg-white/5 border border-[#d7ff2f]/30 rounded-2xl p-4 space-y-3 shadow-inner">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black uppercase tracking-wider text-[#d7ff2f] flex items-center gap-1.5">
+                  <Sparkles size={14} />
+                  Instant Demo Access
+                </span>
+                <span className="text-[10px] text-slate-400">1-Click Jump</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => quickDemoLogin("trainer")}
+                  className="py-2.5 px-2 bg-[#d7ff2f]/10 border border-[#d7ff2f]/40 hover:bg-[#d7ff2f] hover:text-[#0b0b0b] text-[#d7ff2f] rounded-lg text-xs font-bold uppercase transition-all flex flex-col items-center gap-1 cursor-pointer"
+                >
+                  <UserCheck size={16} />
+                  Trainer
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => quickDemoLogin("admin")}
+                  className="py-2.5 px-2 bg-[#00f2fe]/10 border border-[#00f2fe]/40 hover:bg-[#00f2fe] hover:text-[#0b0b0b] text-[#00f2fe] rounded-lg text-xs font-bold uppercase transition-all flex flex-col items-center gap-1 cursor-pointer"
+                >
+                  <ShieldAlert size={16} />
+                  Admin
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => quickDemoLogin("member")}
+                  className="py-2.5 px-2 bg-white/5 border border-white/20 hover:bg-white hover:text-[#0b0b0b] text-white rounded-lg text-xs font-bold uppercase transition-all flex flex-col items-center gap-1 cursor-pointer"
+                >
+                  <User size={16} />
+                  Member
+                </button>
+              </div>
+            </div>
+
+            {/* Role Switcher Tabs */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+                Account Type
+              </label>
+              <div className="grid grid-cols-3 p-1 bg-white/5 rounded-xl border border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setRole("trainer")}
+                  className={`py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
+                    role === "trainer"
+                      ? "bg-[#d7ff2f] text-[#0b0b0b] shadow-md"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Trainer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("admin")}
+                  className={`py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
+                    role === "admin"
+                      ? "bg-[#00f2fe] text-[#0b0b0b] shadow-md"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRole("member")}
+                  className={`py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
+                    role === "member"
+                      ? "bg-white text-[#0b0b0b] shadow-md"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  Member
+                </button>
+              </div>
+            </div>
+
+            {/* Login Form */}
+            <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
                   Email or Username
                 </label>
                 <div className="relative">
                   <input
                     type="text"
                     required
-                    placeholder="athlete@forged.com"
+                    placeholder={
+                      role === "admin"
+                        ? "admin@forgedgym.com"
+                        : role === "trainer"
+                        ? "marcus@forgedgym.com"
+                        : "athlete@forged.com"
+                    }
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white/5 border border-white/15 rounded-lg pl-10 pr-4 py-3.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-[#d7ff2f] transition-colors"
+                    className="w-full bg-white/5 border border-white/15 rounded-lg pl-10 pr-4 py-3 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-[#d7ff2f] transition-colors"
                   />
                   <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 </div>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
                     Password
                   </label>
@@ -145,7 +254,7 @@ export default function LoginPage() {
                     href="/forgot-password"
                     className="text-xs text-[#d7ff2f] hover:underline font-semibold"
                   >
-                    Forgot Password?
+                    Forgot?
                   </Link>
                 </div>
                 <div className="relative">
@@ -155,7 +264,7 @@ export default function LoginPage() {
                     placeholder="••••••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/15 rounded-lg pl-10 pr-10 py-3.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-[#d7ff2f] transition-colors"
+                    className="w-full bg-white/5 border border-white/15 rounded-lg pl-10 pr-10 py-3 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-[#d7ff2f] transition-colors"
                   />
                   <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <button
@@ -168,31 +277,20 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs">
-                <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="rounded bg-white/5 border-white/20 text-[#d7ff2f] focus:ring-0 cursor-pointer"
-                  />
-                  Remember login details
-                </label>
-              </div>
-
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-linear-to-r from-[#d7ff2f] to-[#b8e020] text-[#0b0b0b] font-black text-sm uppercase tracking-wider rounded-lg shadow-[0_6px_30px_rgba(215,255,47,0.35)] hover:scale-[1.01] transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="w-full py-4 bg-linear-to-r from-[#d7ff2f] to-[#b8e020] text-[#0b0b0b] font-black text-sm uppercase tracking-wider rounded-lg shadow-[0_6px_30px_rgba(215,255,47,0.35)] hover:scale-[1.01] transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
                 style={{ fontFamily: "Space Grotesk, sans-serif" }}
               >
-                {loading ? "Authenticating..." : "Sign In & Continue"}
+                {loading ? "Authenticating..." : `Sign In to ${role.toUpperCase()} Dashboard`}
                 <ArrowRight size={16} />
               </button>
             </form>
 
-            {/* Register Footer */}
-            <div className="pt-6 border-t border-white/10 text-center">
+            <div className="pt-4 border-t border-white/10 text-center">
               <p className="text-slate-300 text-xs font-normal">
-                Don&apos;t have a FORGED account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link
                   href="/register"
                   className="text-[#d7ff2f] font-bold uppercase tracking-wider hover:underline"
