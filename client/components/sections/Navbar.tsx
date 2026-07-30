@@ -66,13 +66,20 @@ export default function Navbar() {
           </ul>
 
           {/* Glass CTA */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
             <Link
-              href="/dashboard"
-              className="px-4 py-2 bg-white/5 border border-[#d7ff2f]/40 hover:bg-[#d7ff2f] hover:text-[#0b0b0b] text-[#d7ff2f] text-xs font-black uppercase tracking-wider rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+              href="/dashboard/trainer"
+              className="px-3 py-1.5 bg-[#d7ff2f]/10 border border-[#d7ff2f]/40 hover:bg-[#d7ff2f] hover:text-[#0b0b0b] text-[#d7ff2f] text-[11px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
               style={{ fontFamily: "Space Grotesk, sans-serif" }}
             >
-              Dashboard
+              Trainer HQ
+            </Link>
+            <Link
+              href="/dashboard/admin"
+              className="px-3 py-1.5 bg-[#00f2fe]/10 border border-[#00f2fe]/40 hover:bg-[#00f2fe] hover:text-[#0b0b0b] text-[#00f2fe] text-[11px] font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+              style={{ fontFamily: "Space Grotesk, sans-serif" }}
+            >
+              Admin HQ
             </Link>
             <Link
               href="/login"
@@ -81,16 +88,6 @@ export default function Navbar() {
             >
               Sign In
             </Link>
-            <motion.a
-              href="/#pricing"
-              whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(215,255,47,0.5)" }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-2.5 bg-linear-to-r from-[#d7ff2f] to-[#b8e020] text-[#0b0b0b] font-heading font-black text-xs uppercase tracking-wider rounded-full shadow-[0_4px_20px_rgba(215,255,47,0.3)] transition-all duration-300 flex items-center gap-1.5 cursor-pointer"
-              style={{ fontFamily: "Space Grotesk, sans-serif" }}
-            >
-              Get Access
-              <ArrowRight size={14} />
-            </motion.a>
           </div>
 
           {/* Mobile hamburger */}
@@ -112,7 +109,7 @@ export default function Navbar() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-40 bg-[#12151c]/95 backdrop-blur-2xl flex flex-col items-center justify-center gap-8 md:hidden"
+            className="fixed inset-0 z-40 bg-[#12151c]/95 backdrop-blur-2xl flex flex-col items-center justify-center gap-6 md:hidden"
           >
             <button
               className="absolute top-6 right-6 text-white p-2 rounded-full border border-white/10 bg-white/5 cursor-pointer"
@@ -130,23 +127,30 @@ export default function Navbar() {
                 <Link
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className="text-3xl font-heading font-black uppercase tracking-widest text-white hover:text-[#d7ff2f] transition-colors"
+                  className="text-2xl font-heading font-black uppercase tracking-widest text-white hover:text-[#d7ff2f] transition-colors"
                   style={{ fontFamily: "Space Grotesk, sans-serif" }}
                 >
                   {link.label}
                 </Link>
               </motion.div>
             ))}
-            <motion.a
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: navLinks.length * 0.08 }}
-              href="/#pricing"
-              onClick={() => setMobileOpen(false)}
-              className="mt-4 px-8 py-3 bg-[#d7ff2f] text-[#0b0b0b] font-heading font-bold text-lg uppercase tracking-wider rounded-full shadow-[0_0_30px_rgba(215,255,47,0.4)]"
-            >
-              Get Access
-            </motion.a>
+
+            <div className="flex flex-col items-center gap-3 pt-4 border-t border-white/10 w-full max-w-xs px-6">
+              <Link
+                href="/dashboard/trainer"
+                onClick={() => setMobileOpen(false)}
+                className="w-full text-center py-2.5 bg-[#d7ff2f] text-[#0b0b0b] font-heading font-bold text-sm uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(215,255,47,0.4)]"
+              >
+                Trainer Dashboard
+              </Link>
+              <Link
+                href="/dashboard/admin"
+                onClick={() => setMobileOpen(false)}
+                className="w-full text-center py-2.5 bg-[#00f2fe] text-[#0b0b0b] font-heading font-bold text-sm uppercase tracking-wider rounded-xl shadow-[0_0_20px_rgba(0,242,254,0.4)]"
+              >
+                Admin Dashboard
+              </Link>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

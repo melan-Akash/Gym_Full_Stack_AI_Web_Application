@@ -123,7 +123,23 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 relative z-10 shrink-0">
+            <div className="flex items-center gap-3 relative z-10 shrink-0 flex-wrap">
+              <Link
+                href="/dashboard/trainer"
+                className="px-3.5 py-2.5 bg-[#d7ff2f]/10 border border-[#d7ff2f]/40 hover:bg-[#d7ff2f] hover:text-[#0b0b0b] text-[#d7ff2f] text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+                style={{ fontFamily: "Space Grotesk, sans-serif" }}
+              >
+                Trainer HQ
+              </Link>
+
+              <Link
+                href="/dashboard/admin"
+                className="px-3.5 py-2.5 bg-[#00f2fe]/10 border border-[#00f2fe]/40 hover:bg-[#00f2fe] hover:text-[#0b0b0b] text-[#00f2fe] text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer"
+                style={{ fontFamily: "Space Grotesk, sans-serif" }}
+              >
+                Admin HQ
+              </Link>
+
               <Link
                 href="/services#meet-our-ai"
                 className="px-5 py-3 bg-[#d7ff2f] text-[#0b0b0b] font-black text-xs uppercase tracking-wider rounded-lg shadow-[0_4px_20px_rgba(215,255,47,0.3)] hover:scale-105 transition-all cursor-pointer flex items-center gap-2"
@@ -507,6 +523,30 @@ export default function DashboardPage() {
                   >
                     Open AI Meal Generator →
                   </Link>
+
+                  <div className="flex items-center gap-3 flex-wrap relative z-10">
+                    <Link
+                      href="/dashboard/trainer"
+                      className="px-3.5 py-2 bg-[#d7ff2f]/10 border border-[#d7ff2f]/40 hover:bg-[#d7ff2f] hover:text-[#0b0b0b] text-[#d7ff2f] text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                      style={{ fontFamily: "Space Grotesk, sans-serif" }}
+                    >
+                      Trainer HQ
+                    </Link>
+                    <Link
+                      href="/dashboard/admin"
+                      className="px-3.5 py-2 bg-[#00f2fe]/10 border border-[#00f2fe]/40 hover:bg-[#00f2fe] hover:text-[#0b0b0b] text-[#00f2fe] text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                      style={{ fontFamily: "Space Grotesk, sans-serif" }}
+                    >
+                      Admin HQ
+                    </Link>
+                    <Link
+                      href="/onboarding"
+                      className="px-4 py-2 bg-white/5 border border-white/20 hover:bg-white hover:text-black text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all"
+                      style={{ fontFamily: "Space Grotesk, sans-serif" }}
+                    >
+                      Update Biometrics
+                    </Link>
+                  </div>
                 </div>
               )}
 

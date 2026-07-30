@@ -162,11 +162,22 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-[11px] font-bold text-emerald-400">
-              <ShieldCheck size={12} />
-              Facility Operations: ONLINE
-            </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/trainer"
+              className="px-3 py-1 bg-[#d7ff2f]/10 border border-[#d7ff2f]/40 hover:bg-[#d7ff2f] hover:text-[#0b0b0b] text-[#d7ff2f] text-[10px] font-black uppercase tracking-wider rounded-lg transition-all"
+              style={{ fontFamily: "Space Grotesk, sans-serif" }}
+            >
+              Switch to Trainer HQ
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="px-3 py-1 bg-white/5 border border-white/20 hover:bg-white hover:text-[#0b0b0b] text-white text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all"
+              style={{ fontFamily: "Space Grotesk, sans-serif" }}
+            >
+              Member Portal
+            </Link>
 
             <button className="relative p-2 rounded-full bg-white/5 border border-white/10 hover:border-[#00f2fe]/40 text-slate-300 hover:text-white">
               <Bell size={16} />

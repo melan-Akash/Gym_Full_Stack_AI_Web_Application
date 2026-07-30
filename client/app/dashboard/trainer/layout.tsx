@@ -166,11 +166,22 @@ export default function TrainerDashboardLayout({ children }: { children: React.R
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 px-3 py-1 bg-[#d7ff2f]/10 border border-[#d7ff2f]/30 rounded-full text-[11px] font-bold text-[#d7ff2f]">
-              <Sparkles size={12} />
-              Active Shift: 07:00 AM - 05:00 PM
-            </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/admin"
+              className="px-3 py-1 bg-[#00f2fe]/10 border border-[#00f2fe]/40 hover:bg-[#00f2fe] hover:text-[#0b0b0b] text-[#00f2fe] text-[10px] font-black uppercase tracking-wider rounded-lg transition-all"
+              style={{ fontFamily: "Space Grotesk, sans-serif" }}
+            >
+              Switch to Admin HQ
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="px-3 py-1 bg-white/5 border border-white/20 hover:bg-white hover:text-[#0b0b0b] text-white text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all"
+              style={{ fontFamily: "Space Grotesk, sans-serif" }}
+            >
+              Member Portal
+            </Link>
 
             <button className="relative p-2 rounded-full bg-white/5 border border-white/10 hover:border-[#d7ff2f]/40 text-slate-300 hover:text-white">
               <Bell size={16} />
