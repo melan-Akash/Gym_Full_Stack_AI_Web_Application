@@ -4,34 +4,67 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Lock, Mail, ShieldCheck, Eye, EyeOff, User, UserCheck, ShieldAlert, Sparkles } from "lucide-react";
+import { ArrowRight, Lock, Mail, ShieldCheck, Eye, EyeOff, User as UserIcon, UserCheck, ShieldAlert, Sparkles, AlertCircle } from "lucide-react";
+import { useAppContext } from "@/context/appcontext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, error: contextError, setError } = useAppContext();
+
   const [role, setRole] = useState<"member" | "trainer" | "admin">("trainer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    setErrorMessage(null);
+    setError(null);
+
+    try {
+      // Call AppContext login which communicates with http://localhost:5000/api/auth/login
+      const loggedUser = await login(email, password);
+
       setLoading(false);
-      if (role === "admin") {
+      // Route based on authenticated user role
+      if (loggedUser.role === "admin") {
         router.push("/dashboard/admin");
-      } else if (role === "trainer") {
+      } else if (loggedUser.role === "trainer") {
         router.push("/dashboard/trainer");
       } else {
         router.push("/dashboard");
       }
-    }, 600);
+    } catch (err: any) {
+      setLoading(false);
+      setErrorMessage(err.message || "Invalid login credentials. Please try again.");
+    }
   };
 
-  const quickDemoLogin = (targetRole: "member" | "trainer" | "admin") => {
+  const quickDemoLogin = async (targetRole: "member" | "trainer" | "admin") => {
     setLoading(true);
-    setTimeout(() => {
+    setErrorMessage(null);
+    setError(null);
+
+    // Default demo credentials corresponding to role
+    let demoEmail = "athlete@forged.com";
+    if (targetRole === "admin") demoEmail = "admin@forgedgym.com";
+    if (targetRole === "trainer") demoEmail = "marcus@forgedgym.com";
+
+    try {
+      const loggedUser = await login(demoEmail, "password123");
+      setLoading(false);
+      if (loggedUser.role === "admin" || targetRole === "admin") {
+        router.push("/dashboard/admin");
+      } else if (loggedUser.role === "trainer" || targetRole === "trainer") {
+        router.push("/dashboard/trainer");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err) {
+      // Fallback demo redirect if backend isn't seeded with demo credentials yet
       setLoading(false);
       if (targetRole === "admin") {
         router.push("/dashboard/admin");
@@ -40,7 +73,7 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard");
       }
-    }, 400);
+    }
   };
 
   return (
@@ -76,7 +109,7 @@ export default function LoginPage() {
           <div className="relative z-10 max-w-lg space-y-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#d7ff2f]/15 border border-[#d7ff2f]/40 rounded-md text-xs font-black uppercase text-[#d7ff2f]">
               <ShieldCheck size={14} />
-              Unified FORGED Portal (Client / Trainer / Admin)
+              Live Backend Connected (JWT Auth)
             </div>
 
             <h2
@@ -87,7 +120,7 @@ export default function LoginPage() {
             </h2>
 
             <p className="text-slate-300 text-sm leading-relaxed font-normal">
-              Access your personalized control center. Whether managing gym operations as Admin, sculpting client plans as Trainer, or tracking PRs as Member.
+              Access your personalized control center. Powered by Express REST API, MongoDB Cloud, and OpenRouter AI.
             </p>
 
             <div className="flex items-center gap-6 pt-4 border-t border-white/15">
@@ -134,9 +167,17 @@ export default function LoginPage() {
                 Sign In To <span className="text-[#d7ff2f]">FORGED</span>
               </h1>
               <p className="text-slate-300 text-xs mt-1 font-normal">
-                Select your account role below to access your dedicated workspace.
+                Enter your credentials to authenticate with the Express API backend.
               </p>
             </div>
+
+            {/* Error Notification Badge */}
+            {(errorMessage || contextError) && (
+              <div className="bg-red-500/15 border border-red-500/40 text-red-400 p-3.5 rounded-xl text-xs flex items-center gap-2.5">
+                <AlertCircle size={16} className="shrink-0" />
+                <span>{errorMessage || contextError}</span>
+              </div>
+            )}
 
             {/* Quick Demo Access Bar */}
             <div className="bg-white/5 border border-[#d7ff2f]/30 rounded-2xl p-4 space-y-3 shadow-inner">
@@ -172,7 +213,7 @@ export default function LoginPage() {
                   onClick={() => quickDemoLogin("member")}
                   className="py-2.5 px-2 bg-white/5 border border-white/20 hover:bg-white hover:text-[#0b0b0b] text-white rounded-lg text-xs font-bold uppercase transition-all flex flex-col items-center gap-1 cursor-pointer"
                 >
-                  <User size={16} />
+                  <UserIcon size={16} />
                   Member
                 </button>
               </div>
@@ -186,7 +227,10 @@ export default function LoginPage() {
               <div className="grid grid-cols-3 p-1 bg-white/5 rounded-xl border border-white/10">
                 <button
                   type="button"
-                  onClick={() => setRole("trainer")}
+                  onClick={() => {
+                    setRole("trainer");
+                    setEmail("marcus@forgedgym.com");
+                  }}
                   className={`py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
                     role === "trainer"
                       ? "bg-[#d7ff2f] text-[#0b0b0b] shadow-md"
@@ -197,7 +241,10 @@ export default function LoginPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRole("admin")}
+                  onClick={() => {
+                    setRole("admin");
+                    setEmail("admin@forgedgym.com");
+                  }}
                   className={`py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
                     role === "admin"
                       ? "bg-[#00f2fe] text-[#0b0b0b] shadow-md"
@@ -208,7 +255,10 @@ export default function LoginPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRole("member")}
+                  onClick={() => {
+                    setRole("member");
+                    setEmail("athlete@forged.com");
+                  }}
                   className={`py-2 rounded-lg text-xs font-bold uppercase transition-all cursor-pointer ${
                     role === "member"
                       ? "bg-white text-[#0b0b0b] shadow-md"
@@ -224,11 +274,11 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
-                  Email or Username
+                  Email Address
                 </label>
                 <div className="relative">
                   <input
-                    type="text"
+                    type="email"
                     required
                     placeholder={
                       role === "admin"
@@ -283,7 +333,7 @@ export default function LoginPage() {
                 className="w-full py-4 bg-linear-to-r from-[#d7ff2f] to-[#b8e020] text-[#0b0b0b] font-black text-sm uppercase tracking-wider rounded-lg shadow-[0_6px_30px_rgba(215,255,47,0.35)] hover:scale-[1.01] transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
                 style={{ fontFamily: "Space Grotesk, sans-serif" }}
               >
-                {loading ? "Authenticating..." : `Sign In to ${role.toUpperCase()} Dashboard`}
+                {loading ? "Authenticating API..." : `Sign In to ${role.toUpperCase()} Dashboard`}
                 <ArrowRight size={16} />
               </button>
             </form>

@@ -3,6 +3,7 @@ import "./globals.css";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { ToastContainer } from "react-toast-msg";
 import AiChatWidget from "@/components/ui/AiChatWidget";
+import { AppProvider } from "@/context/appcontext";
 
 export const metadata: Metadata = {
   title: "FORGED | Elite Athletic & Performance Center",
@@ -33,11 +34,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth" >
+    <html lang="en" className="scroll-smooth">
       <body className="antialiased">
-        <ToastContainer />
-        {children}
-        <AiChatWidget />
+        <AppProvider>
+          <ToastContainer />
+          {children}
+          <AiChatWidget />
+        </AppProvider>
       </body>
     </html>
   );

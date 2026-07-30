@@ -1,35 +1,58 @@
 "use client";
 
-import { useState } from "react";
-import { SYSTEM_NOTIFICATIONS, SystemNotification } from "@/lib/adminData";
-import { Bell, Send, CheckCircle2, Megaphone, AlertTriangle, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAppContext } from "@/context/appcontext";
+import { SYSTEM_NOTIFICATIONS } from "@/lib/adminData";
+import { Megaphone, Send, CheckCircle2 } from "lucide-react";
 
 export default function AdminNotificationsPage() {
-  const [notifications, setNotifications] = useState<SystemNotification[]>(SYSTEM_NOTIFICATIONS);
+  const { adminGetNotifications, adminCreateNotification } = useAppContext();
+
+  const [notifications, setNotifications] = useState<any[]>(SYSTEM_NOTIFICATIONS);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
-  const [audience, setAudience] = useState<"All Members" | "Trainers Only" | "VIP Members">("All Members");
+  const [audience, setAudience] = useState("All Members");
+  const [loading, setLoading] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
 
-  const handleBroadcast = (e: React.FormEvent) => {
+  const fetchNotifs = async () => {
+    try {
+      const data = await adminGetNotifications();
+      if (data && data.length > 0) setNotifications(data);
+    } catch (err) {
+      console.log("Using static notification fallback");
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifs();
+  }, []);
+
+  const handleBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !message.trim()) return;
 
-    const newNotif: SystemNotification = {
-      id: Date.now().toString(),
-      title,
-      message,
-      category: "Announcement",
-      targetAudience: audience,
-      createdAt: "Just now",
-      sentBy: "Admin HQ",
-    };
+    setLoading(true);
 
-    setNotifications([newNotif, ...notifications]);
-    setTitle("");
-    setMessage("");
-    setSentSuccess(true);
-    setTimeout(() => setSentSuccess(false), 2000);
+    try {
+      await adminCreateNotification({
+        title,
+        message,
+        category: "Announcement",
+        targetAudience: audience,
+      });
+
+      setLoading(false);
+      setSentSuccess(true);
+      fetchNotifs();
+      setTitle("");
+      setMessage("");
+
+      setTimeout(() => setSentSuccess(false), 2000);
+    } catch (err: any) {
+      setLoading(false);
+      alert(err.message || "Failed to broadcast notification");
+    }
   };
 
   return (
@@ -38,7 +61,7 @@ export default function AdminNotificationsPage() {
         <h1 className="text-3xl font-black uppercase text-white tracking-tight" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
           SYSTEM <span className="text-[#00f2fe]">NOTIFICATIONS & BROADCASTS</span>
         </h1>
-        <p className="text-slate-400 text-xs mt-1">Send app push notifications, SMS alerts, and facility announcements.</p>
+        <p className="text-slate-400 text-xs mt-1">Live MongoDB notification feed, app push alerts, and facility announcements.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -53,7 +76,7 @@ export default function AdminNotificationsPage() {
               <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Target Audience</label>
               <select
                 value={audience}
-                onChange={(e) => setAudience(e.target.value as any)}
+                onChange={(e) => setAudience(e.target.value)}
                 className="w-full bg-[#1e2230] border border-white/15 rounded-xl px-3 py-2 text-white text-xs"
               >
                 <option value="All Members">All Members (1,248 Athletes)</option>
@@ -88,11 +111,12 @@ export default function AdminNotificationsPage() {
 
             <button
               type="submit"
+              disabled={loading}
               className="w-full py-3 bg-[#00f2fe] text-[#0b0b0b] font-black text-xs uppercase tracking-wider rounded-xl hover:bg-[#00d0e0] transition-all cursor-pointer flex items-center justify-center gap-2"
               style={{ fontFamily: "Space Grotesk, sans-serif" }}
             >
               <Send size={15} />
-              {sentSuccess ? "Broadcast Sent!" : "Send Broadcast Now"}
+              {loading ? "Sending to MongoDB..." : sentSuccess ? "Broadcast Saved to DB!" : "Send Broadcast Now"}
             </button>
           </form>
         </div>
@@ -101,22 +125,22 @@ export default function AdminNotificationsPage() {
         <div className="lg:col-span-7 space-y-4">
           <div className="bg-[#12151c] border border-white/10 rounded-2xl p-6 space-y-4">
             <h3 className="text-lg font-black uppercase text-white" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-              Active System Announcements
+              Active System Announcements ({notifications.length})
             </h3>
 
             <div className="space-y-3">
-              {notifications.map((notif) => (
-                <div key={notif.id} className="bg-white/5 border border-white/10 p-4 rounded-xl space-y-2">
+              {notifications.map((notif, idx) => (
+                <div key={notif._id || notif.id || idx} className="bg-white/5 border border-white/10 p-4 rounded-xl space-y-2">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-bold text-white">{notif.title}</h4>
                     <span className="text-[9px] bg-[#00f2fe]/20 text-[#00f2fe] px-2 py-0.5 rounded font-bold uppercase">
-                      {notif.targetAudience}
+                      {notif.targetAudience || "All Members"}
                     </span>
                   </div>
                   <p className="text-slate-300 text-xs">{notif.message}</p>
                   <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1">
-                    <span>Sent by: {notif.sentBy}</span>
-                    <span>{notif.createdAt}</span>
+                    <span>Sent by: {notif.sentBy || "Admin HQ"}</span>
+                    <span>{notif.createdAt ? new Date(notif.createdAt).toLocaleDateString() : "Today"}</span>
                   </div>
                 </div>
               ))}
