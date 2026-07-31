@@ -24,7 +24,8 @@ interface AppContextType {
   register: (name: string, email: string, password: string, role?: string) => Promise<User>;
   logout: () => void;
   setError: (err: string | null) => void;
-  // Admin API Helper Functions
+
+  // Admin API Helpers
   adminGetStats: () => Promise<any>;
   adminGetMembers: () => Promise<User[]>;
   adminGetMemberById: (id: string) => Promise<User>;
@@ -38,6 +39,17 @@ interface AppContextType {
   adminRecordCheckIn: (userId?: string, method?: string) => Promise<any>;
   adminGetNotifications: () => Promise<any[]>;
   adminCreateNotification: (notifData: any) => Promise<any>;
+
+  // Trainer API Helpers
+  trainerGetStats: () => Promise<any>;
+  trainerGetClients: () => Promise<User[]>;
+  trainerGetClientById: (id: string) => Promise<User>;
+  trainerGetBookings: () => Promise<any[]>;
+  trainerGetWorkouts: () => Promise<any[]>;
+  trainerCreateWorkout: (workoutData: any) => Promise<any>;
+  trainerGetMeals: () => Promise<any[]>;
+  trainerCreateMeal: (mealData: any) => Promise<any>;
+  trainerGenerateAIPlan: (payload: any) => Promise<any>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -50,7 +62,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load saved token and user on startup
   useEffect(() => {
     const savedToken = localStorage.getItem("forged_token");
     const savedUser = localStorage.getItem("forged_user");
@@ -75,7 +86,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   };
 
-  // Auth Handlers
   const login = async (email: string, password: string): Promise<User> => {
     setError(null);
     setLoading(true);
@@ -259,6 +269,76 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return data.data;
   };
 
+  // --- TRAINER API CALLS ---
+  const trainerGetStats = async () => {
+    const res = await fetch(`${BACKEND_URL}/trainers/dashboard/stats`, { headers: getHeaders() });
+    const data = await res.json();
+    return data.success ? data.data : null;
+  };
+
+  const trainerGetClients = async () => {
+    const res = await fetch(`${BACKEND_URL}/trainers/my-clients`, { headers: getHeaders() });
+    const data = await res.json();
+    return data.success ? data.data : [];
+  };
+
+  const trainerGetClientById = async (id: string) => {
+    const res = await fetch(`${BACKEND_URL}/trainers/my-clients/${id}`, { headers: getHeaders() });
+    const data = await res.json();
+    return data.success ? data.data : null;
+  };
+
+  const trainerGetBookings = async () => {
+    const res = await fetch(`${BACKEND_URL}/trainers/bookings`, { headers: getHeaders() });
+    const data = await res.json();
+    return data.success ? data.data : [];
+  };
+
+  const trainerGetWorkouts = async () => {
+    const res = await fetch(`${BACKEND_URL}/workouts`, { headers: getHeaders() });
+    const data = await res.json();
+    return data.success ? data.data : [];
+  };
+
+  const trainerCreateWorkout = async (workoutData: any) => {
+    const res = await fetch(`${BACKEND_URL}/workouts`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(workoutData),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || "Failed to create workout plan");
+    return data.data;
+  };
+
+  const trainerGetMeals = async () => {
+    const res = await fetch(`${BACKEND_URL}/meals`, { headers: getHeaders() });
+    const data = await res.json();
+    return data.success ? data.data : [];
+  };
+
+  const trainerCreateMeal = async (mealData: any) => {
+    const res = await fetch(`${BACKEND_URL}/meals`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(mealData),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || "Failed to create meal plan");
+    return data.data;
+  };
+
+  const trainerGenerateAIPlan = async (payload: any) => {
+    const res = await fetch(`${BACKEND_URL}/ai/generate`, {
+      method: "POST",
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || "AI generation failed");
+    return data;
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -270,6 +350,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         register,
         logout,
         setError,
+
         adminGetStats,
         adminGetMembers,
         adminGetMemberById,
@@ -283,6 +364,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adminRecordCheckIn,
         adminGetNotifications,
         adminCreateNotification,
+
+        trainerGetStats,
+        trainerGetClients,
+        trainerGetClientById,
+        trainerGetBookings,
+        trainerGetWorkouts,
+        trainerCreateWorkout,
+        trainerGetMeals,
+        trainerCreateMeal,
+        trainerGenerateAIPlan,
       }}
     >
       {children}

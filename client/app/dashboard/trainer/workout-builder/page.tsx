@@ -1,257 +1,228 @@
 "use client";
 
 import { useState } from "react";
-import { Dumbbell, Plus, Trash2, Save, Sparkles, CheckCircle2, Clock } from "lucide-react";
+import { useAppContext } from "@/context/appcontext";
+import { Sparkles, Plus, CheckCircle2, Dumbbell } from "lucide-react";
+import toast from "react-hot-toast";
 
-interface ExerciseItem {
-  id: string;
-  name: string;
-  sets: number;
-  reps: string;
-  restSeconds: number;
-  muscle: string;
-}
+export default function TrainerWorkoutBuilderPage() {
+  const { trainerCreateWorkout, trainerGenerateAIPlan } = useAppContext();
 
-export default function WorkoutBuilderPage() {
-  const [workoutTitle, setWorkoutTitle] = useState("Hypertrophy Chest & Triceps Shred");
-  const [category, setCategory] = useState("Bodybuilding");
-  const [targetClient, setTargetClient] = useState("David Miller");
-  const [exercises, setExercises] = useState<ExerciseItem[]>([
-    { id: "e1", name: "Incline Barbell Press", sets: 4, reps: "8-10", restSeconds: 90, muscle: "Upper Chest" },
-    { id: "e2", name: "Flat Cable Flyes", sets: 3, reps: "12-15", restSeconds: 60, muscle: "Mid Chest" },
-    { id: "e3", name: "Triceps Overhead Extension", sets: 4, reps: "10-12", restSeconds: 60, muscle: "Triceps Long Head" },
+  const [title, setTitle] = useState("Pro Hypertrophy Chest & Triceps");
+  const [category, setCategory] = useState("Hypertrophy");
+  const [level, setLevel] = useState("Intermediate");
+  const [durationMinutes, setDurationMinutes] = useState(60);
+  const [targetMuscles, setTargetMuscles] = useState("Chest, Triceps, Shoulders");
+  const [loading, setLoading] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiOutput, setAiOutput] = useState<string | null>(null);
+
+  const [exercises, setExercises] = useState([
+    { name: "Incline Barbell Bench Press", sets: 4, reps: "8-10", restSeconds: 90 },
+    { name: "Flat Dumbbell Press", sets: 4, reps: "10-12", restSeconds: 75 },
+    { name: "Cable Chest Flyes", sets: 3, reps: "12-15", restSeconds: 60 },
   ]);
 
-  const [newExName, setNewExName] = useState("");
-  const [newExSets, setNewExSets] = useState(3);
-  const [newExReps, setNewExReps] = useState("10-12");
-  const [newExRest, setNewExRest] = useState(60);
-  const [newExMuscle, setNewExMuscle] = useState("Chest");
-
-  const [savedSuccess, setSavedSuccess] = useState(false);
-
-  const addExercise = () => {
-    if (!newExName.trim()) return;
-    const newEx: ExerciseItem = {
-      id: Date.now().toString(),
-      name: newExName,
-      sets: Number(newExSets),
-      reps: newExReps,
-      restSeconds: Number(newExRest),
-      muscle: newExMuscle,
-    };
-    setExercises([...exercises, newEx]);
-    setNewExName("");
+  const handleAddExercise = () => {
+    setExercises([...exercises, { name: "New Exercise", sets: 3, reps: "10-12", restSeconds: 60 }]);
   };
 
-  const removeExercise = (id: string) => {
-    setExercises(exercises.filter((ex) => ex.id !== id));
+  const handleGenerateAI = async () => {
+    setAiGenerating(true);
+    setAiOutput(null);
+    try {
+      const res = await trainerGenerateAIPlan({
+        type: "workout",
+        goal: category,
+        fitnessLevel: level,
+        weightLbs: 180,
+        userPrompt: `Target Muscles: ${targetMuscles}`,
+      });
+
+      setAiGenerating(false);
+      setAiOutput(res.output);
+      toast.success("AI Workout Generated via OpenRouter (meta-llama/llama-3.1-8b-instruct)!", {
+        icon: "🤖",
+      });
+    } catch (err: any) {
+      setAiGenerating(false);
+      toast.error(err.message || "AI Generation failed");
+    }
   };
 
-  const handleSave = () => {
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 2500);
+  const handleSaveWorkout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const musclesArray = targetMuscles.split(",").map((m) => m.trim());
+      await trainerCreateWorkout({
+        title,
+        category,
+        level,
+        durationMinutes,
+        targetMuscles: musclesArray,
+        exercises,
+      });
+
+      setLoading(false);
+      toast.success(`Workout routine "${title}" saved to MongoDB database!`, {
+        icon: "⚡",
+      });
+    } catch (err: any) {
+      setLoading(false);
+      toast.error(err.message || "Failed to save workout");
+    }
   };
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
-          <span className="text-[#d7ff2f] text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 font-heading">
-            <Sparkles size={14} /> Interactive Workout Engine
-          </span>
           <h1 className="text-3xl font-black uppercase text-white tracking-tight" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-            WORKOUT <span className="text-[#d7ff2f]">BUILDER</span>
+            WORKOUT <span className="text-[#d7ff2f]">ROUTINE BUILDER & AI ENGINE</span>
           </h1>
-          <p className="text-slate-400 text-xs mt-1">Design customized exercise routines, sets, rep ranges, and rest intervals.</p>
+          <p className="text-slate-400 text-xs mt-1">Design hyper-targeted workout splits or generate via OpenRouter AI.</p>
         </div>
 
         <button
-          onClick={handleSave}
-          className="px-6 py-3 bg-[#d7ff2f] text-[#0b0b0b] font-black text-xs uppercase tracking-wider rounded-xl hover:bg-[#c8f020] transition-all flex items-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(215,255,47,0.3)]"
+          onClick={handleGenerateAI}
+          disabled={aiGenerating}
+          className="px-5 py-2.5 bg-linear-to-r from-[#00f2fe] to-[#4facfe] text-[#0b0b0b] font-black text-xs uppercase tracking-wider rounded-xl hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer shadow-lg"
           style={{ fontFamily: "Space Grotesk, sans-serif" }}
         >
-          <Save size={16} />
-          {savedSuccess ? "Workout Saved!" : "Save & Publish Plan"}
+          <Sparkles size={16} />
+          {aiGenerating ? "OpenRouter AI Generating..." : "Generate AI Routine"}
         </button>
       </div>
 
-      {/* Main Builder Form */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: General Configuration */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-[#12151c] border border-white/10 rounded-2xl p-6 space-y-4">
-            <h3 className="text-base font-black uppercase text-white" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-              Routine Parameters
-            </h3>
-
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-300 mb-1.5">Workout Title</label>
-              <input
-                type="text"
-                value={workoutTitle}
-                onChange={(e) => setWorkoutTitle(e.target.value)}
-                className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-[#d7ff2f]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-300 mb-1.5">Training Discipline</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-[#1e2230] border border-white/15 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-[#d7ff2f]"
-              >
-                <option value="Bodybuilding">Bodybuilding & Hypertrophy</option>
-                <option value="HIIT">HIIT & Metabolic Conditioning</option>
-                <option value="Powerlifting">Powerlifting & Max Strength</option>
-                <option value="Mobility">Mobility & Rehabilitation</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-300 mb-1.5">Assign To Client</label>
-              <select
-                value={targetClient}
-                onChange={(e) => setTargetClient(e.target.value)}
-                className="w-full bg-[#1e2230] border border-white/15 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-[#d7ff2f]"
-              >
-                <option value="David Miller">David Miller (Hypertrophy)</option>
-                <option value="Sarah Jenkins">Sarah Jenkins (Shred)</option>
-                <option value="Alex Thorne">Alex Thorne (HIIT)</option>
-                <option value="Chloe Bennett">Chloe Bennett (Mobility)</option>
-              </select>
-            </div>
-
-            <div className="pt-2 border-t border-white/10">
-              <div className="flex justify-between text-xs text-slate-300 py-1">
-                <span>Total Exercises:</span>
-                <span className="font-bold text-white">{exercises.length}</span>
-              </div>
-              <div className="flex justify-between text-xs text-slate-300 py-1">
-                <span>Est. Duration:</span>
-                <span className="font-bold text-[#d7ff2f]">{exercises.length * 15} Mins</span>
-              </div>
-            </div>
+      {/* AI Response Output Card */}
+      {aiOutput && (
+        <div className="bg-[#12151c] border border-[#00f2fe]/40 rounded-2xl p-6 space-y-3 shadow-2xl">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <span className="text-[#00f2fe] text-xs font-black uppercase tracking-wider flex items-center gap-1.5 font-heading">
+              <Sparkles size={16} /> OpenRouter AI Output (meta-llama/llama-3.1-8b-instruct)
+            </span>
+            <span className="text-[10px] bg-[#00f2fe]/20 text-[#00f2fe] px-2.5 py-0.5 rounded font-bold uppercase">Live AI Model</span>
           </div>
 
-          {/* Add Exercise Form */}
-          <div className="bg-[#12151c] border border-white/10 rounded-2xl p-6 space-y-4">
-            <h3 className="text-base font-black uppercase text-white flex items-center gap-2" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-              <Plus size={16} className="text-[#d7ff2f]" />
-              Add Exercise to List
-            </h3>
+          <div className="text-xs text-slate-200 leading-relaxed font-mono whitespace-pre-wrap max-h-96 overflow-y-auto p-4 bg-black/40 rounded-xl border border-white/10">
+            {aiOutput}
+          </div>
+        </div>
+      )}
 
-            <div>
-              <label className="block text-[11px] font-bold uppercase text-slate-300 mb-1">Exercise Name</label>
-              <input
-                type="text"
-                placeholder="e.g. Dumbbell Shoulder Press"
-                value={newExName}
-                onChange={(e) => setNewExName(e.target.value)}
-                className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-[#d7ff2f]"
-              />
-            </div>
+      {/* Form */}
+      <form onSubmit={handleSaveWorkout} className="bg-[#12151c] border border-white/10 rounded-2xl p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div>
+            <label className="block text-slate-300 font-bold uppercase mb-1">Routine Title</label>
+            <input
+              type="text"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#d7ff2f]"
+            />
+          </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-300 mb-1">Sets</label>
-                <input
-                  type="number"
-                  value={newExSets}
-                  onChange={(e) => setNewExSets(Number(e.target.value))}
-                  className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-300 mb-1">Reps</label>
-                <input
-                  type="text"
-                  value={newExReps}
-                  onChange={(e) => setNewExReps(e.target.value)}
-                  className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white text-xs"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-300 mb-1">Rest (Sec)</label>
-                <input
-                  type="number"
-                  value={newExRest}
-                  onChange={(e) => setNewExRest(Number(e.target.value))}
-                  className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold uppercase text-slate-300 mb-1">Target Muscle</label>
-                <input
-                  type="text"
-                  value={newExMuscle}
-                  onChange={(e) => setNewExMuscle(e.target.value)}
-                  className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white text-xs"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={addExercise}
-              className="w-full py-2.5 bg-white/10 hover:bg-[#d7ff2f] hover:text-[#0b0b0b] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+          <div>
+            <label className="block text-slate-300 font-bold uppercase mb-1">Category</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full bg-[#1e2230] border border-white/15 rounded-xl px-3 py-2 text-white"
             >
-              + Add Exercise
+              <option value="Hypertrophy">Hypertrophy (Muscle Growth)</option>
+              <option value="Strength">Strength & Powerbuilding</option>
+              <option value="Fat Loss">Fat Loss & Conditioning</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-slate-300 font-bold uppercase mb-1">Target Muscles</label>
+            <input
+              type="text"
+              value={targetMuscles}
+              onChange={(e) => setTargetMuscles(e.target.value)}
+              className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#d7ff2f]"
+            />
+          </div>
+        </div>
+
+        {/* Exercises Table */}
+        <div className="space-y-3 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black uppercase text-white flex items-center gap-2" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+              <Dumbbell size={16} className="text-[#d7ff2f]" /> Exercise Prescriptions ({exercises.length})
+            </h3>
+            <button
+              type="button"
+              onClick={handleAddExercise}
+              className="px-3 py-1.5 bg-white/5 border border-white/15 hover:bg-[#d7ff2f] hover:text-[#0b0b0b] text-white text-xs font-bold uppercase rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+            >
+              <Plus size={14} /> Add Exercise Line
             </button>
           </div>
-        </div>
 
-        {/* Right Column: Exercises Sequence List */}
-        <div className="lg:col-span-8 space-y-4">
-          <div className="bg-[#12151c] border border-white/10 rounded-2xl p-6 space-y-4">
-            <h3 className="text-lg font-black uppercase text-white" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-              Exercise Program Sequence ({exercises.length})
-            </h3>
-
-            {exercises.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 text-xs">No exercises added yet.</div>
-            ) : (
-              <div className="space-y-3">
-                {exercises.map((ex, index) => (
-                  <div key={ex.id} className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 rounded-full bg-[#d7ff2f]/20 border border-[#d7ff2f]/40 text-[#d7ff2f] font-bold text-xs flex items-center justify-center shrink-0">
-                        {index + 1}
-                      </span>
-                      <div>
-                        <h4 className="text-sm font-bold text-white">{ex.name}</h4>
-                        <span className="text-[11px] text-[#00f2fe] uppercase font-semibold">{ex.muscle}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-6">
-                      <div className="text-right text-xs">
-                        <span className="font-bold text-white block">{ex.sets} Sets × {ex.reps}</span>
-                        <span className="text-slate-400 text-[10px] flex items-center gap-1 justify-end">
-                          <Clock size={11} /> {ex.restSeconds}s rest
-                        </span>
-                      </div>
-
-                      <button
-                        onClick={() => removeExercise(ex.id)}
-                        className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+          <div className="space-y-2">
+            {exercises.map((ex, idx) => (
+              <div key={idx} className="bg-white/5 border border-white/10 p-3 rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-3 text-xs items-center">
+                <div className="sm:col-span-6">
+                  <input
+                    type="text"
+                    value={ex.name}
+                    onChange={(e) => {
+                      const updated = [...exercises];
+                      updated[idx].name = e.target.value;
+                      setExercises(updated);
+                    }}
+                    className="w-full bg-transparent text-white font-bold focus:outline-none"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="text-slate-400">Sets: </span>
+                  <input
+                    type="number"
+                    value={ex.sets}
+                    onChange={(e) => {
+                      const updated = [...exercises];
+                      updated[idx].sets = Number(e.target.value);
+                      setExercises(updated);
+                    }}
+                    className="w-12 bg-white/5 text-white text-center rounded focus:outline-none font-bold"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="text-slate-400">Reps: </span>
+                  <input
+                    type="text"
+                    value={ex.reps}
+                    onChange={(e) => {
+                      const updated = [...exercises];
+                      updated[idx].reps = e.target.value;
+                      setExercises(updated);
+                    }}
+                    className="w-16 bg-white/5 text-white text-center rounded focus:outline-none font-bold"
+                  />
+                </div>
+                <div className="sm:col-span-2 text-right">
+                  <span className="text-slate-400 font-mono text-[10px]">{ex.restSeconds}s Rest</span>
+                </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
-      </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-4 bg-[#d7ff2f] text-[#0b0b0b] font-black text-sm uppercase tracking-wider rounded-xl hover:bg-[#b8e020] transition-all cursor-pointer shadow-lg"
+          style={{ fontFamily: "Space Grotesk, sans-serif" }}
+        >
+          {loading ? "Saving to MongoDB..." : "Save Routine to MongoDB Database"}
+        </button>
+      </form>
     </div>
   );
 }

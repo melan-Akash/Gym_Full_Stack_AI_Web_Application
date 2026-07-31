@@ -1,239 +1,184 @@
 "use client";
 
 import { useState } from "react";
-import { Utensils, Plus, Trash2, Save, Sparkles, Flame, Apple } from "lucide-react";
+import { useAppContext } from "@/context/appcontext";
+import { Sparkles, Utensils } from "lucide-react";
+import toast from "react-hot-toast";
 
-interface MealItem {
-  id: string;
-  time: string;
-  name: string;
-  items: string[];
-}
+export default function TrainerMealBuilderPage() {
+  const { trainerCreateMeal, trainerGenerateAIPlan } = useAppContext();
 
-export default function MealBuilderPage() {
-  const [planTitle, setPlanTitle] = useState("High-Protein Hypertrophy Blueprint");
-  const [targetClient, setTargetClient] = useState("David Miller");
-  const [calories, setCalories] = useState(3100);
-  const [protein, setProtein] = useState(210);
-  const [carbs, setCarbs] = useState(340);
-  const [fats, setFats] = useState(80);
+  const [title, setTitle] = useState("Pro High-Protein Muscle Shred Plan");
+  const [goal, setGoal] = useState("Lean Muscle & Fat Loss");
+  const [calories, setCalories] = useState(2400);
+  const [proteinGrams, setProteinGrams] = useState(210);
+  const [carbsGrams, setCarbsGrams] = useState(240);
+  const [fatsGrams, setFatsGrams] = useState(65);
+  const [loading, setLoading] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiOutput, setAiOutput] = useState<string | null>(null);
 
-  const [meals, setMeals] = useState<MealItem[]>([
-    { id: "m1", time: "07:30 AM", name: "Power Breakfast", items: ["6 Whole Organic Eggs", "1.5 Cups Oatmeal", "1 tbsp Peanut Butter"] },
-    { id: "m2", time: "12:30 PM", name: "Clean Lunch Split", items: ["8oz Grilled Chicken Breast", "2 Cups Jasmine Rice", "Steamed Broccoli"] },
-    { id: "m3", time: "07:00 PM", name: "Anabolic Dinner", items: ["8oz Salmon Fillet", "1 Large Sweet Potato", "Mixed Greens"] },
-  ]);
+  const handleGenerateAI = async () => {
+    setAiGenerating(true);
+    setAiOutput(null);
+    try {
+      const res = await trainerGenerateAIPlan({
+        type: "meal",
+        goal: goal,
+        dietaryPreference: "High-Protein Clean Muscle Intake",
+        userPrompt: `Target Calories: ${calories} kcal. Protein: ${proteinGrams}g, Carbs: ${carbsGrams}g, Fats: ${fatsGrams}g.`,
+      });
 
-  const [newMealTime, setNewMealTime] = useState("04:00 PM");
-  const [newMealName, setNewMealName] = useState("Pre-Workout Snack");
-  const [newMealFood, setNewMealFood] = useState("2 Scoops Whey Isolate + 1 Banana");
-  const [saved, setSaved] = useState(false);
-
-  const addMeal = () => {
-    if (!newMealName.trim()) return;
-    const newM: MealItem = {
-      id: Date.now().toString(),
-      time: newMealTime,
-      name: newMealName,
-      items: [newMealFood],
-    };
-    setMeals([...meals, newM]);
-    setNewMealName("");
-    setNewMealFood("");
+      setAiGenerating(false);
+      setAiOutput(res.output);
+      toast.success("AI Meal Plan Generated via OpenRouter (meta-llama/llama-3.1-8b-instruct)!", {
+        icon: "🥗",
+      });
+    } catch (err: any) {
+      setAiGenerating(false);
+      toast.error(err.message || "AI Meal generation failed");
+    }
   };
 
-  const removeMeal = (id: string) => {
-    setMeals(meals.filter((m) => m.id !== id));
-  };
+  const handleSaveMeal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    try {
+      await trainerCreateMeal({
+        title,
+        goal,
+        calories,
+        proteinGrams,
+        carbsGrams,
+        fatsGrams,
+      });
+
+      setLoading(false);
+      toast.success(`Meal Plan "${title}" saved to MongoDB database!`, {
+        icon: "⚡",
+      });
+    } catch (err: any) {
+      setLoading(false);
+      toast.error(err.message || "Failed to save meal plan");
+    }
   };
 
   return (
     <div className="space-y-8">
-      {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
-          <span className="text-[#00f2fe] text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 font-heading">
-            <Sparkles size={14} /> Nutrition & Macro Engine
-          </span>
           <h1 className="text-3xl font-black uppercase text-white tracking-tight" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-            MEAL <span className="text-[#00f2fe]">BUILDER</span>
+            PRECISION NUTRITION & <span className="text-[#d7ff2f]">MEAL BUILDER</span>
           </h1>
-          <p className="text-slate-400 text-xs mt-1">Engineered macronutrient splits, meal timing schedules, and dietary recommendations.</p>
+          <p className="text-slate-400 text-xs mt-1">Design daily macro breakdowns or generate tailored nutrition with OpenRouter AI.</p>
         </div>
 
         <button
-          onClick={handleSave}
-          className="px-6 py-3 bg-[#00f2fe] text-[#0b0b0b] font-black text-xs uppercase tracking-wider rounded-xl hover:bg-[#00d0e0] transition-all flex items-center gap-2 cursor-pointer shadow-[0_0_20px_rgba(0,242,254,0.3)]"
+          onClick={handleGenerateAI}
+          disabled={aiGenerating}
+          className="px-5 py-2.5 bg-linear-to-r from-[#00f2fe] to-[#4facfe] text-[#0b0b0b] font-black text-xs uppercase tracking-wider rounded-xl hover:scale-[1.02] transition-all flex items-center gap-2 cursor-pointer shadow-lg"
           style={{ fontFamily: "Space Grotesk, sans-serif" }}
         >
-          <Save size={16} />
-          {saved ? "Meal Plan Saved!" : "Publish Meal Plan"}
+          <Sparkles size={16} />
+          {aiGenerating ? "OpenRouter AI Generating..." : "Generate AI Nutrition Plan"}
         </button>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Macro Calculator & Client Selector */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-[#12151c] border border-white/10 rounded-2xl p-6 space-y-4">
-            <h3 className="text-base font-black uppercase text-white" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-              Target Macros Calibrator
-            </h3>
-
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Plan Title</label>
-              <input
-                type="text"
-                value={planTitle}
-                onChange={(e) => setPlanTitle(e.target.value)}
-                className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-[#00f2fe]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold uppercase text-slate-300 mb-1">Target Client</label>
-              <select
-                value={targetClient}
-                onChange={(e) => setTargetClient(e.target.value)}
-                className="w-full bg-[#1e2230] border border-white/15 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-[#00f2fe]"
-              >
-                <option value="David Miller">David Miller (Bulking)</option>
-                <option value="Sarah Jenkins">Sarah Jenkins (Cutting)</option>
-                <option value="Alex Thorne">Alex Thorne (Maintenance)</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400">Calories (kcal)</label>
-                <input
-                  type="number"
-                  value={calories}
-                  onChange={(e) => setCalories(Number(e.target.value))}
-                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-1.5 text-white text-xs font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400">Protein (g)</label>
-                <input
-                  type="number"
-                  value={protein}
-                  onChange={(e) => setProtein(Number(e.target.value))}
-                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-1.5 text-emerald-400 text-xs font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400">Carbs (g)</label>
-                <input
-                  type="number"
-                  value={carbs}
-                  onChange={(e) => setCarbs(Number(e.target.value))}
-                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-1.5 text-amber-400 text-xs font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase text-slate-400">Fats (g)</label>
-                <input
-                  type="number"
-                  value={fats}
-                  onChange={(e) => setFats(Number(e.target.value))}
-                  className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-1.5 text-purple-400 text-xs font-bold"
-                />
-              </div>
-            </div>
+      {/* AI Output Card */}
+      {aiOutput && (
+        <div className="bg-[#12151c] border border-[#00f2fe]/40 rounded-2xl p-6 space-y-3 shadow-2xl">
+          <div className="flex items-center justify-between border-b border-white/10 pb-3">
+            <span className="text-[#00f2fe] text-xs font-black uppercase tracking-wider flex items-center gap-1.5 font-heading">
+              <Sparkles size={16} /> OpenRouter AI Nutrition Output (meta-llama/llama-3.1-8b-instruct)
+            </span>
+            <span className="text-[10px] bg-[#00f2fe]/20 text-[#00f2fe] px-2.5 py-0.5 rounded font-bold uppercase">Live AI Model</span>
           </div>
 
-          {/* Add Meal Form */}
-          <div className="bg-[#12151c] border border-white/10 rounded-2xl p-6 space-y-4">
-            <h3 className="text-base font-black uppercase text-white flex items-center gap-2" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-              <Plus size={16} className="text-[#00f2fe]" />
-              Add Meal Slot
-            </h3>
+          <div className="text-xs text-slate-200 leading-relaxed font-mono whitespace-pre-wrap max-h-96 overflow-y-auto p-4 bg-black/40 rounded-xl border border-white/10">
+            {aiOutput}
+          </div>
+        </div>
+      )}
 
-            <div>
-              <label className="block text-[11px] font-bold uppercase text-slate-300 mb-1">Time Slot</label>
-              <input
-                type="text"
-                value={newMealTime}
-                onChange={(e) => setNewMealTime(e.target.value)}
-                className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white text-xs"
-              />
-            </div>
+      {/* Form */}
+      <form onSubmit={handleSaveMeal} className="bg-[#12151c] border border-white/10 rounded-2xl p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label className="block text-slate-300 font-bold uppercase mb-1">Meal Plan Title</label>
+            <input
+              type="text"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#d7ff2f]"
+            />
+          </div>
 
-            <div>
-              <label className="block text-[11px] font-bold uppercase text-slate-300 mb-1">Meal Title</label>
-              <input
-                type="text"
-                value={newMealName}
-                onChange={(e) => setNewMealName(e.target.value)}
-                className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white text-xs"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold uppercase text-slate-300 mb-1">Food Items</label>
-              <input
-                type="text"
-                placeholder="e.g. 2 scoops Whey, 1 banana"
-                value={newMealFood}
-                onChange={(e) => setNewMealFood(e.target.value)}
-                className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white text-xs"
-              />
-            </div>
-
-            <button
-              onClick={addMeal}
-              className="w-full py-2.5 bg-white/10 hover:bg-[#00f2fe] hover:text-[#0b0b0b] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer"
-            >
-              + Add Meal Slot
-            </button>
+          <div>
+            <label className="block text-slate-300 font-bold uppercase mb-1">Primary Goal</label>
+            <input
+              type="text"
+              required
+              value={goal}
+              onChange={(e) => setGoal(e.target.value)}
+              className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-[#d7ff2f]"
+            />
           </div>
         </div>
 
-        {/* Right Column: Meal Schedule */}
-        <div className="lg:col-span-8 space-y-4">
-          <div className="bg-[#12151c] border border-white/10 rounded-2xl p-6 space-y-4">
-            <h3 className="text-lg font-black uppercase text-white" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-              Daily Meal Schedule ({meals.length} Meals)
-            </h3>
+        {/* Macros Breakdown */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs pt-4 border-t border-white/10">
+          <div>
+            <label className="block text-slate-300 font-bold uppercase mb-1">Total Calories</label>
+            <input
+              type="number"
+              value={calories}
+              onChange={(e) => setCalories(Number(e.target.value))}
+              className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-[#d7ff2f] font-black text-sm focus:outline-none"
+            />
+          </div>
 
-            <div className="space-y-3">
-              {meals.map((m) => (
-                <div key={m.id} className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono text-[#00f2fe] font-bold bg-[#00f2fe]/10 px-2 py-0.5 rounded">
-                        {m.time}
-                      </span>
-                      <h4 className="text-sm font-bold text-white">{m.name}</h4>
-                    </div>
+          <div>
+            <label className="block text-slate-300 font-bold uppercase mb-1">Protein (g)</label>
+            <input
+              type="number"
+              value={proteinGrams}
+              onChange={(e) => setProteinGrams(Number(e.target.value))}
+              className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white font-bold focus:outline-none"
+            />
+          </div>
 
-                    <ul className="text-xs text-slate-300 space-y-0.5 pl-2 pt-1 border-l border-white/10">
-                      {m.items.map((item, idx) => (
-                        <li key={idx}>• {item}</li>
-                      ))}
-                    </ul>
-                  </div>
+          <div>
+            <label className="block text-slate-300 font-bold uppercase mb-1">Carbs (g)</label>
+            <input
+              type="number"
+              value={carbsGrams}
+              onChange={(e) => setCarbsGrams(Number(e.target.value))}
+              className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white font-bold focus:outline-none"
+            />
+          </div>
 
-                  <button
-                    onClick={() => removeMeal(m.id)}
-                    className="p-2 text-slate-400 hover:text-red-400 transition-colors"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
+          <div>
+            <label className="block text-slate-300 font-bold uppercase mb-1">Fats (g)</label>
+            <input
+              type="number"
+              value={fatsGrams}
+              onChange={(e) => setFatsGrams(Number(e.target.value))}
+              className="w-full bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white font-bold focus:outline-none"
+            />
           </div>
         </div>
-      </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-4 bg-[#d7ff2f] text-[#0b0b0b] font-black text-sm uppercase tracking-wider rounded-xl hover:bg-[#b8e020] transition-all cursor-pointer shadow-lg"
+          style={{ fontFamily: "Space Grotesk, sans-serif" }}
+        >
+          {loading ? "Saving to MongoDB..." : "Save Meal Plan to MongoDB Database"}
+        </button>
+      </form>
     </div>
   );
 }

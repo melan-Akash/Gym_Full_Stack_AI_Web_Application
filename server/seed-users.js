@@ -6,12 +6,15 @@ const MembershipPlan = require("./models/MembershipPlan");
 const Payment = require("./models/Payment");
 const Attendance = require("./models/Attendance");
 const Notification = require("./models/Notification");
+const Booking = require("./models/Booking");
+const WorkoutPlan = require("./models/WorkoutPlan");
+const MealPlan = require("./models/MealPlan");
 
 async function seedDatabase() {
   await connectDB();
 
   console.log("---------------------------------------------------");
-  console.log("🌱 SEEDING FULL ADMIN & TRAINER DATA INTO MONGODB ATLAS");
+  console.log("🌱 SEEDING FULL TRAINER & ADMIN DATA INTO MONGODB ATLAS");
   console.log("---------------------------------------------------");
 
   try {
@@ -76,97 +79,61 @@ async function seedDatabase() {
         assignedTrainer: trainer._id,
       });
       console.log("✅ Member created: athlete@forged.com / password123");
+    } else {
+      // Ensure assignedTrainer is set
+      member.assignedTrainer = trainer._id;
+      await member.save();
     }
 
-    // 4. Seed Membership Plans
-    const plansCount = await MembershipPlan.countDocuments();
-    if (plansCount === 0) {
-      await MembershipPlan.insertMany([
-        {
-          title: "Basic Access",
-          price: 49,
-          billingPeriod: "Monthly",
-          features: ["Access to Main Gym Floor", "Locker Access", "Standard Fob (6AM-10PM)"],
-          activeSubscribers: 420,
-        },
-        {
-          title: "Pro Performance",
-          price: 99,
-          billingPeriod: "Monthly",
-          isPopular: true,
-          features: ["24/7 Unlimited Access", "Sauna & Cold Plunge Suite", "Group Classes"],
-          activeSubscribers: 580,
-        },
-        {
-          title: "VIP Elite Athlete",
-          price: 199,
-          billingPeriod: "Monthly",
-          features: ["Everything in Pro", "Dedicated Personal Trainer", "AI Workout & Meal Engine"],
-          activeSubscribers: 248,
-        },
-      ]);
-      console.log("✅ Membership Plans seeded into MongoDB");
-    }
-
-    // 5. Seed Payments
-    const paymentsCount = await Payment.countDocuments();
-    if (paymentsCount === 0) {
-      await Payment.insertMany([
-        {
-          invoiceId: "INV-2026-0891",
-          member: member._id,
-          planName: "VIP Elite Athlete",
-          amount: 199.0,
-          paymentMethod: "Credit Card",
-          status: "Paid",
-          date: "2026-07-30",
-        },
-        {
-          invoiceId: "INV-2026-0892",
-          member: member._id,
-          planName: "Personal Training Pack",
-          amount: 425.0,
-          paymentMethod: "Apple Pay",
-          status: "Paid",
-          date: "2026-07-29",
-        },
-      ]);
-      console.log("✅ Payments ledger seeded into MongoDB");
-    }
-
-    // 6. Seed Attendance
-    const attendanceCount = await Attendance.countDocuments();
-    if (attendanceCount === 0) {
+    // 4. Seed Bookings for Trainer
+    const bookingsCount = await Booking.countDocuments();
+    if (bookingsCount === 0) {
       const today = new Date().toISOString().split("T")[0];
-      await Attendance.insertMany([
+      await Booking.insertMany([
         {
-          user: member._id,
+          trainer: trainer._id,
+          client: member._id,
           date: today,
-          time: "08:30 AM",
-          method: "Mobile App QR",
-          status: "Present",
+          time: "10:00 AM",
+          sessionType: "1-on-1 Hypertrophy Session",
+          status: "Confirmed",
+          notes: "Focusing on chest & shoulders progression.",
+        },
+        {
+          trainer: trainer._id,
+          client: member._id,
+          date: today,
+          time: "02:00 PM",
+          sessionType: "Physique Assessment & Body Fat Scan",
+          status: "Confirmed",
+          notes: "Monthly bio-metric check.",
         },
       ]);
-      console.log("✅ Attendance logs seeded into MongoDB");
+      console.log("✅ Trainer Bookings seeded into MongoDB");
     }
 
-    // 7. Seed Notifications
-    const notifCount = await Notification.countDocuments();
-    if (notifCount === 0) {
-      await Notification.insertMany([
-        {
-          title: "New Recovery Lab Equipment Installation",
-          message: "The new Cryotherapy chambers are now live on the 2nd floor.",
-          category: "Announcement",
-          targetAudience: "All Members",
-          sentBy: "Admin HQ",
-        },
-      ]);
-      console.log("✅ System Notifications seeded into MongoDB");
+    // 5. Seed Workouts
+    const workoutsCount = await WorkoutPlan.countDocuments();
+    if (workoutsCount === 0) {
+      await WorkoutPlan.create({
+        title: "Pro Hypertrophy Upper Body Annihilation",
+        category: "Hypertrophy",
+        level: "Advanced",
+        durationMinutes: 75,
+        targetMuscles: ["Chest", "Lats", "Deltoids", "Triceps"],
+        assignedTo: member._id,
+        createdBy: trainer._id,
+        exercises: [
+          { name: "Incline Barbell Press", sets: 4, reps: "8-10", restSeconds: 90 },
+          { name: "Weighted Pull-Ups", sets: 4, reps: "6-8", restSeconds: 90 },
+          { name: "Standing Dumbbell Lateral Raises", sets: 4, reps: "12-15", restSeconds: 60 },
+        ],
+      });
+      console.log("✅ Workout routines seeded into MongoDB");
     }
 
     console.log("---------------------------------------------------");
-    console.log("🎉 ALL MONGODB ATLAS SEEDING COMPLETED SUCCESSFULLY!");
+    console.log("🎉 ALL TRAINER SEEDING COMPLETED!");
     console.log("---------------------------------------------------");
     process.exit(0);
   } catch (error) {
