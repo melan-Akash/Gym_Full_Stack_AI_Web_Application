@@ -206,6 +206,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return data.data;
   };
 
+  const adminUpdateMember = async (id: string, memberData: any) => {
+    const res = await fetch(`${BACKEND_URL}/admin/members/${id}`, {
+      method: "PUT",
+      headers: getHeaders(),
+      body: JSON.stringify(memberData),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || "Failed to update member");
+    return data.data;
+  };
+
+  const adminDeleteMember = async (id: string) => {
+    const res = await fetch(`${BACKEND_URL}/admin/members/${id}`, {
+      method: "DELETE",
+      headers: getHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || "Failed to delete member");
+    return data;
+  };
+
   const adminGetTrainers = async () => {
     const res = await fetch(`${BACKEND_URL}/admin/trainers`, { headers: getHeaders() });
     const data = await res.json();
@@ -227,6 +248,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.message || "Failed to create plan");
     return data.data;
+  };
+
+  const adminUpdateMembershipPlan = async (id: string, planData: any) => {
+    const res = await fetch(`${BACKEND_URL}/admin/membership-plans/${id}`, {
+      method: "PUT",
+      headers: getHeaders(),
+      body: JSON.stringify(planData),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || "Failed to update plan");
+    return data.data;
+  };
+
+  const adminDeleteMembershipPlan = async (id: string) => {
+    const res = await fetch(`${BACKEND_URL}/admin/membership-plans/${id}`, {
+      method: "DELETE",
+      headers: getHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || "Failed to delete plan");
+    return data;
   };
 
   const adminGetPayments = async () => {
@@ -355,10 +397,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adminGetMembers,
         adminGetMemberById,
         adminCreateMember,
+        adminUpdateMember,
+        adminDeleteMember,
         adminUpdateMemberStatus,
         adminGetTrainers,
         adminGetMembershipPlans,
         adminCreateMembershipPlan,
+        adminUpdateMembershipPlan,
+        adminDeleteMembershipPlan,
         adminGetPayments,
         adminGetAttendance,
         adminRecordCheckIn,

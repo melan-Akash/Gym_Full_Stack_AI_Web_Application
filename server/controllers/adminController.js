@@ -93,6 +93,48 @@ const createMember = async (req, res) => {
   }
 };
 
+// @desc    Update member details
+// @route   PUT /api/admin/members/:id
+// @access  Private (Admin)
+const updateMember = async (req, res) => {
+  try {
+    const { name, phone, membershipTier, assignedTrainer, status } = req.body;
+    const member = await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        ...(name && { name }),
+        ...(phone && { phone }),
+        ...(membershipTier && { membershipTier }),
+        ...(assignedTrainer !== undefined && { assignedTrainer }),
+        ...(status && { status }),
+      },
+      { new: true }
+    );
+
+    if (!member) {
+      return res.status(404).json({ success: false, message: "Member not found" });
+    }
+    res.json({ success: true, message: "Member details updated successfully", data: member });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete gym member account
+// @route   DELETE /api/admin/members/:id
+// @access  Private (Admin)
+const deleteMember = async (req, res) => {
+  try {
+    const member = await User.findByIdAndDelete(req.params.id);
+    if (!member) {
+      return res.status(404).json({ success: false, message: "Member not found" });
+    }
+    res.json({ success: true, message: "Member account deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Update member status (Active, Expired, Suspended)
 // @route   PATCH /api/admin/members/:id/status
 // @access  Private (Admin)
@@ -121,6 +163,153 @@ const getAdminTrainers = async (req, res) => {
   }
 };
 
+// @desc    Create a new trainer profile (User account + TrainerProfile)
+// @route   POST /api/admin/trainers
+// @access  Private (Admin Only)
+const createTrainerProfile = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      phone,
+      avatar,
+      title,
+      category,
+      bio,
+      fullBio,
+      experienceYears,
+      hourlyRate,
+      specializations,
+      certifications,
+      achievements,
+      availableDays,
+      timeSlots,
+    } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ success: false, message: "Trainer name and email are required" });
+    }
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ success: false, message: "User with this email already exists" });
+    }
+
+    // 1. Create User with role 'trainer'
+    const trainerUser = await User.create({
+      name,
+      email,
+      password: password || "trainer123",
+      role: "trainer",
+      phone: phone || "",
+      avatar: avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80",
+      status: "Active",
+    });
+
+    // 2. Create Trainer Profile
+    const profile = await TrainerProfile.create({
+      user: trainerUser._id,
+      image: avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80",
+      title: title || "Certified Strength & Fitness Coach",
+      category: category || "Bodybuilding",
+      bio: bio || "Dedicated fitness professional helping athletes surpass their physical goals.",
+      fullBio: fullBio || bio || "",
+      experienceYears: Number(experienceYears) || 5,
+      hourlyRate: Number(hourlyRate) || 75,
+      specializations: specializations
+        ? (Array.isArray(specializations) ? specializations : specializations.split(",").map(s => s.trim()))
+        : ["Bodybuilding", "Strength Training"],
+      certifications: certifications
+        ? (Array.isArray(certifications) ? certifications : certifications.split(",").map(c => c.trim()))
+        : ["NASM Certified Personal Trainer"],
+      achievements: achievements || [],
+      availableDays: availableDays || ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      timeSlots: timeSlots || ["08:00 AM", "10:00 AM", "02:00 PM", "04:00 PM"],
+    });
+
+    const populatedProfile = await TrainerProfile.findById(profile._id).populate("user", "name email avatar phone status");
+
+    res.status(201).json({
+      success: true,
+      message: "Trainer account and profile created successfully",
+      data: populatedProfile,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update a trainer profile
+// @route   PUT /api/admin/trainers/:id
+// @access  Private (Admin Only)
+const updateTrainerProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, phone, avatar, ...profileData } = req.body;
+
+    const profile = await TrainerProfile.findById(id);
+    if (!profile) {
+      return res.status(404).json({ success: false, message: "Trainer profile not found" });
+    }
+
+    // Update associated User details if provided
+    if (name || phone || avatar) {
+      await User.findByIdAndUpdate(profile.user, {
+        ...(name && { name }),
+        ...(phone && { phone }),
+        ...(avatar && { avatar }),
+      });
+    }
+
+    if (avatar) {
+      profileData.image = avatar;
+    }
+
+    if (profileData.specializations && typeof profileData.specializations === "string") {
+      profileData.specializations = profileData.specializations.split(",").map(s => s.trim());
+    }
+
+    // Update Profile fields
+    const updatedProfile = await TrainerProfile.findByIdAndUpdate(id, profileData, { new: true }).populate(
+      "user",
+      "name email avatar phone status"
+    );
+
+    res.json({
+      success: true,
+      message: "Trainer profile updated successfully",
+      data: updatedProfile,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete a trainer profile and user account
+// @route   DELETE /api/admin/trainers/:id
+// @access  Private (Admin Only)
+const deleteTrainerProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const profile = await TrainerProfile.findById(id);
+    if (!profile) {
+      return res.status(404).json({ success: false, message: "Trainer profile not found" });
+    }
+
+    // Delete User account & TrainerProfile
+    await User.findByIdAndDelete(profile.user);
+    await TrainerProfile.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: "Trainer profile and user account deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Get all membership plans
 // @route   GET /api/admin/membership-plans
 // @access  Private (Admin)
@@ -141,6 +330,36 @@ const createMembershipPlan = async (req, res) => {
     const { title, price, billingPeriod, features, isPopular } = req.body;
     const plan = await MembershipPlan.create({ title, price, billingPeriod, features, isPopular });
     res.status(201).json({ success: true, data: plan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update a membership plan
+// @route   PUT /api/admin/membership-plans/:id
+// @access  Private (Admin)
+const updateMembershipPlan = async (req, res) => {
+  try {
+    const plan = await MembershipPlan.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!plan) {
+      return res.status(404).json({ success: false, message: "Membership plan not found" });
+    }
+    res.json({ success: true, message: "Membership plan updated successfully", data: plan });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete a membership plan
+// @route   DELETE /api/admin/membership-plans/:id
+// @access  Private (Admin)
+const deleteMembershipPlan = async (req, res) => {
+  try {
+    const plan = await MembershipPlan.findByIdAndDelete(req.params.id);
+    if (!plan) {
+      return res.status(404).json({ success: false, message: "Membership plan not found" });
+    }
+    res.json({ success: true, message: "Membership plan deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -231,10 +450,17 @@ module.exports = {
   getAllMembers,
   getMemberById,
   createMember,
+  updateMember,
+  deleteMember,
   updateMemberStatus,
   getAdminTrainers,
+  createTrainerProfile,
+  updateTrainerProfile,
+  deleteTrainerProfile,
   getMembershipPlans,
   createMembershipPlan,
+  updateMembershipPlan,
+  deleteMembershipPlan,
   getAdminPayments,
   getAdminAttendance,
   recordCheckIn,

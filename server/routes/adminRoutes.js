@@ -5,10 +5,17 @@ const {
   getAllMembers,
   getMemberById,
   createMember,
+  updateMember,
+  deleteMember,
   updateMemberStatus,
   getAdminTrainers,
+  createTrainerProfile,
+  updateTrainerProfile,
+  deleteTrainerProfile,
   getMembershipPlans,
   createMembershipPlan,
+  updateMembershipPlan,
+  deleteMembershipPlan,
   getAdminPayments,
   getAdminAttendance,
   recordCheckIn,
@@ -23,15 +30,25 @@ router.use(authorize("admin"));
 
 router.get("/stats", getAdminStats);
 
+// Full CRUD for Members
 router.get("/members", getAllMembers);
 router.post("/members", createMember);
 router.get("/members/:id", getMemberById);
+router.put("/members/:id", updateMember);
+router.delete("/members/:id", deleteMember);
 router.patch("/members/:id/status", updateMemberStatus);
 
+// Full CRUD for Trainers
 router.get("/trainers", getAdminTrainers);
+router.post("/trainers", createTrainerProfile);
+router.put("/trainers/:id", updateTrainerProfile);
+router.delete("/trainers/:id", deleteTrainerProfile);
 
+// Full CRUD for Membership Plans
 router.get("/membership-plans", getMembershipPlans);
 router.post("/membership-plans", createMembershipPlan);
+router.put("/membership-plans/:id", updateMembershipPlan);
+router.delete("/membership-plans/:id", deleteMembershipPlan);
 
 router.get("/payments", getAdminPayments);
 

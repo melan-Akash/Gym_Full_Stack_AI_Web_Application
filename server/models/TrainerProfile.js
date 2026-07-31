@@ -8,6 +8,10 @@ const trainerProfileSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    image: {
+      type: String,
+      default: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80",
+    },
     title: {
       type: String,
       required: true,
