@@ -30,10 +30,15 @@ interface AppContextType {
   adminGetMembers: () => Promise<User[]>;
   adminGetMemberById: (id: string) => Promise<User>;
   adminCreateMember: (memberData: any) => Promise<User>;
+  adminUpdateMember: (id: string, memberData: any) => Promise<any>;
+  adminDeleteMember: (id: string) => Promise<any>;
   adminUpdateMemberStatus: (id: string, status: string) => Promise<User>;
+  adminUpdateMemberPaymentStatus: (id: string, paymentStatus: string) => Promise<User>;
   adminGetTrainers: () => Promise<any[]>;
   adminGetMembershipPlans: () => Promise<any[]>;
   adminCreateMembershipPlan: (planData: any) => Promise<any>;
+  adminUpdateMembershipPlan: (id: string, planData: any) => Promise<any>;
+  adminDeleteMembershipPlan: (id: string) => Promise<any>;
   adminGetPayments: () => Promise<any[]>;
   adminGetAttendance: () => Promise<any[]>;
   adminRecordCheckIn: (userId?: string, method?: string) => Promise<any>;
@@ -203,6 +208,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.message || "Failed to update member status");
+    return data.data;
+  };
+
+  const adminUpdateMemberPaymentStatus = async (id: string, paymentStatus: string) => {
+    const res = await fetch(`${BACKEND_URL}/admin/members/${id}/payment-status`, {
+      method: "PATCH",
+      headers: getHeaders(),
+      body: JSON.stringify({ paymentStatus }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message || "Failed to update payment status");
     return data.data;
   };
 
@@ -400,6 +416,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adminUpdateMember,
         adminDeleteMember,
         adminUpdateMemberStatus,
+        adminUpdateMemberPaymentStatus,
         adminGetTrainers,
         adminGetMembershipPlans,
         adminCreateMembershipPlan,

@@ -8,6 +8,7 @@ const {
   updateMember,
   deleteMember,
   updateMemberStatus,
+  updateMemberPaymentStatus,
   getAdminTrainers,
   createTrainerProfile,
   updateTrainerProfile,
@@ -37,6 +38,7 @@ router.get("/members/:id", getMemberById);
 router.put("/members/:id", updateMember);
 router.delete("/members/:id", deleteMember);
 router.patch("/members/:id/status", updateMemberStatus);
+router.patch("/members/:id/payment-status", updateMemberPaymentStatus);
 
 // Full CRUD for Trainers
 router.get("/trainers", getAdminTrainers);

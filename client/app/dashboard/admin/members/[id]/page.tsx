@@ -32,6 +32,11 @@ export default function AdminMemberDetailsPage({ params }: { params: Promise<{ i
               }`}>
                 {member.status}
               </span>
+              <span className={`px-2.5 py-0.5 rounded text-[10px] font-black uppercase ${
+                (member.paymentStatus || "Paid") === "Paid" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+              }`}>
+                Payment: {member.paymentStatus || "Paid"}
+              </span>
             </div>
             <p className="text-xs text-slate-400 mt-1">{member.email} • {member.phone}</p>
             <p className="text-xs text-[#00f2fe] font-bold mt-0.5">Tier: {member.plan}</p>

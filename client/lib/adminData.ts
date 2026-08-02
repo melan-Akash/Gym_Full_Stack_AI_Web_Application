@@ -6,6 +6,7 @@ export interface AdminMember {
   avatar: string;
   plan: "VIP Elite" | "Pro Performance" | "Basic Access";
   status: "Active" | "Expired" | "Suspended" | "Pending";
+  paymentStatus: "Paid" | "Pending" | "Overdue" | "Failed";
   joinedDate: string;
   expiryDate: string;
   trainerAssigned: string;
@@ -77,6 +78,7 @@ export const ADMIN_MEMBERS: AdminMember[] = [
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&q=80",
     plan: "VIP Elite",
     status: "Active",
+    paymentStatus: "Paid",
     joinedDate: "2025-11-10",
     expiryDate: "2026-11-10",
     trainerAssigned: "Marcus Vance",
@@ -91,6 +93,7 @@ export const ADMIN_MEMBERS: AdminMember[] = [
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&q=80",
     plan: "Pro Performance",
     status: "Active",
+    paymentStatus: "Paid",
     joinedDate: "2026-01-05",
     expiryDate: "2027-01-05",
     trainerAssigned: "Elena Rostova",
@@ -105,6 +108,7 @@ export const ADMIN_MEMBERS: AdminMember[] = [
     avatar: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&q=80",
     plan: "Basic Access",
     status: "Active",
+    paymentStatus: "Pending",
     joinedDate: "2026-05-12",
     expiryDate: "2026-08-12",
     trainerAssigned: "Unassigned",
@@ -119,6 +123,7 @@ export const ADMIN_MEMBERS: AdminMember[] = [
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80",
     plan: "VIP Elite",
     status: "Expired",
+    paymentStatus: "Overdue",
     joinedDate: "2025-06-01",
     expiryDate: "2026-06-01",
     trainerAssigned: "Maya Lin",
@@ -133,6 +138,7 @@ export const ADMIN_MEMBERS: AdminMember[] = [
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80",
     plan: "Pro Performance",
     status: "Active",
+    paymentStatus: "Paid",
     joinedDate: "2026-02-20",
     expiryDate: "2027-02-20",
     trainerAssigned: "Viktor Kovac",

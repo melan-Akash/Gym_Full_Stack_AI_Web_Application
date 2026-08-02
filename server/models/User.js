@@ -39,6 +39,11 @@ const userSchema = new mongoose.Schema(
       enum: ["Active", "Expired", "Suspended", "Pending"],
       default: "Active",
     },
+    paymentStatus: {
+      type: String,
+      enum: ["Paid", "Pending", "Overdue", "Failed"],
+      default: "Paid",
+    },
     membershipTier: {
       type: String,
       default: "Basic Access",

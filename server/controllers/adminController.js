@@ -69,7 +69,7 @@ const getMemberById = async (req, res) => {
 // @access  Private (Admin)
 const createMember = async (req, res) => {
   try {
-    const { name, email, password, phone, membershipTier, assignedTrainer } = req.body;
+    const { name, email, password, phone, membershipTier, assignedTrainer, paymentStatus, avatar } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -85,6 +85,8 @@ const createMember = async (req, res) => {
       membershipTier: membershipTier || "Pro Performance",
       assignedTrainer: assignedTrainer || null,
       status: "Active",
+      paymentStatus: paymentStatus || "Paid",
+      ...(avatar && { avatar }),
     });
 
     res.status(201).json({ success: true, data: member });
@@ -98,7 +100,7 @@ const createMember = async (req, res) => {
 // @access  Private (Admin)
 const updateMember = async (req, res) => {
   try {
-    const { name, phone, membershipTier, assignedTrainer, status } = req.body;
+    const { name, phone, membershipTier, assignedTrainer, status, paymentStatus, avatar } = req.body;
     const member = await User.findByIdAndUpdate(
       req.params.id,
       {
@@ -107,6 +109,8 @@ const updateMember = async (req, res) => {
         ...(membershipTier && { membershipTier }),
         ...(assignedTrainer !== undefined && { assignedTrainer }),
         ...(status && { status }),
+        ...(paymentStatus && { paymentStatus }),
+        ...(avatar && { avatar }),
       },
       { new: true }
     );
@@ -142,6 +146,22 @@ const updateMemberStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const member = await User.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    if (!member) {
+      return res.status(404).json({ success: false, message: "Member not found" });
+    }
+    res.json({ success: true, data: member });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update member payment status (Paid, Pending, Overdue, Failed)
+// @route   PATCH /api/admin/members/:id/payment-status
+// @access  Private (Admin)
+const updateMemberPaymentStatus = async (req, res) => {
+  try {
+    const { paymentStatus } = req.body;
+    const member = await User.findByIdAndUpdate(req.params.id, { paymentStatus }, { new: true });
     if (!member) {
       return res.status(404).json({ success: false, message: "Member not found" });
     }
@@ -453,6 +473,7 @@ module.exports = {
   updateMember,
   deleteMember,
   updateMemberStatus,
+  updateMemberPaymentStatus,
   getAdminTrainers,
   createTrainerProfile,
   updateTrainerProfile,
