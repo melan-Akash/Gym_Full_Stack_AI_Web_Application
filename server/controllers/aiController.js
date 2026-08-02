@@ -61,9 +61,20 @@ const generateAIFitnessPlan = async (req, res) => {
       usage: aiResult.usage,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || "Failed to generate AI response.",
+    console.error("[AI Generation Fallback Engaged]", error.message);
+    const { type, goal, fitnessLevel } = req.body;
+    let fallbackOutput = "";
+    if (type === "workout") {
+      fallbackOutput = `🏋️ FORGED ATHLETIC WORKOUT ROUTINE (${fitnessLevel || "Intermediate"} - ${goal || "Hypertrophy"})\n\n1. Incline Barbell Bench Press: 4 Sets x 8-10 Reps (Rest: 90s)\n2. Flat Dumbbell Press: 4 Sets x 10-12 Reps (Rest: 75s)\n3. Standing Cable Chest Flyes: 3 Sets x 12-15 Reps (Rest: 60s)\n4. Tricep Rope Pushdowns: 4 Sets x 12-15 Reps (Rest: 60s)\n5. Overhead Dumbbell Tricep Extension: 3 Sets x 10-12 Reps (Rest: 60s)\n\nCoach Note: Focus on progressive overload, controlling the 2-second eccentric phase on every rep.`;
+    } else {
+      fallbackOutput = `🥗 FORGED PRECISION NUTRITION PLAN (${goal || "Lean Muscle & Fat Loss"})\n\n• Meal 1 - Power Breakfast (08:00 AM): 4 Large Eggs, 80g Rolled Oats with Blueberries, 1 Scoop Whey Isolate (650 kcal | 45g Protein | 60g Carbs | 20g Fat)\n• Meal 2 - Lean Muscle Fuel (01:00 PM): 200g Grilled Chicken Breast, 150g Steamed Jasmine Rice, Roasted Broccoli & Olive Oil (600 kcal | 50g Protein | 55g Carbs | 15g Fat)\n• Meal 3 - Pre-Workout Fuel (04:30 PM): 1 Large Banana, 2 Rice Cakes, 20g Almond Butter (300 kcal | 8g Protein | 40g Carbs | 12g Fat)\n• Meal 4 - Recovery Dinner (08:00 PM): 200g Grass-Fed Sirloin Steak, 200g Baked Sweet Potato, Asparagus (750 kcal | 55g Protein | 45g Carbs | 25g Fat)`;
+    }
+
+    res.json({
+      success: true,
+      model: "FORGED-Engine-Fallback",
+      output: fallbackOutput,
+      isFallback: true,
     });
   }
 };

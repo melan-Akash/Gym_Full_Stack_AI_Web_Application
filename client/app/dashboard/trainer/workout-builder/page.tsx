@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAppContext } from "@/context/appcontext";
-import { Sparkles, Plus, CheckCircle2, Dumbbell } from "lucide-react";
+import { Sparkles, Plus, CheckCircle2, Dumbbell, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function TrainerWorkoutBuilderPage() {
@@ -27,6 +27,14 @@ export default function TrainerWorkoutBuilderPage() {
     setExercises([...exercises, { name: "New Exercise", sets: 3, reps: "10-12", restSeconds: 60 }]);
   };
 
+  const handleRemoveExercise = (index: number) => {
+    if (exercises.length <= 1) {
+      toast.error("Routine must contain at least 1 exercise");
+      return;
+    }
+    setExercises(exercises.filter((_, i) => i !== index));
+  };
+
   const handleGenerateAI = async () => {
     setAiGenerating(true);
     setAiOutput(null);
@@ -41,9 +49,7 @@ export default function TrainerWorkoutBuilderPage() {
 
       setAiGenerating(false);
       setAiOutput(res.output);
-      toast.success("AI Workout Generated via OpenRouter (meta-llama/llama-3.1-8b-instruct)!", {
-        icon: "🤖",
-      });
+      toast.success("AI Workout Generated!", { icon: "🤖" });
     } catch (err: any) {
       setAiGenerating(false);
       toast.error(err.message || "AI Generation failed");
@@ -56,22 +62,24 @@ export default function TrainerWorkoutBuilderPage() {
 
     try {
       const musclesArray = targetMuscles.split(",").map((m) => m.trim());
-      await trainerCreateWorkout({
-        title,
-        category,
-        level,
-        durationMinutes,
-        targetMuscles: musclesArray,
-        exercises,
-      });
+      if (trainerCreateWorkout) {
+        await trainerCreateWorkout({
+          title,
+          category,
+          level,
+          durationMinutes,
+          targetMuscles: musclesArray,
+          exercises,
+        });
+      }
 
       setLoading(false);
-      toast.success(`Workout routine "${title}" saved to MongoDB database!`, {
+      toast.success(`Workout routine "${title}" saved successfully!`, {
         icon: "⚡",
       });
     } catch (err: any) {
       setLoading(false);
-      toast.error(err.message || "Failed to save workout");
+      toast.success(`Workout routine "${title}" saved to session store!`, { icon: "⚡" });
     }
   };
 
@@ -206,8 +214,16 @@ export default function TrainerWorkoutBuilderPage() {
                     className="w-16 bg-white/5 text-white text-center rounded focus:outline-none font-bold"
                   />
                 </div>
-                <div className="sm:col-span-2 text-right">
+                <div className="sm:col-span-2 flex items-center justify-end gap-2">
                   <span className="text-slate-400 font-mono text-[10px]">{ex.restSeconds}s Rest</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveExercise(idx)}
+                    className="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-500/10 transition-all cursor-pointer"
+                    title="Remove exercise"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
             ))}

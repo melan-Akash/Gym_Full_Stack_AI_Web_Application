@@ -38,6 +38,19 @@ const trainerProfileSchema = new mongoose.Schema(
       type: Number,
       default: 75,
     },
+    commissionRate: {
+      type: Number,
+      default: 20, // 20% admin commission cut
+    },
+    monthlyRevenueGenerated: {
+      type: Number,
+      default: 12000,
+    },
+    commissionStatus: {
+      type: String,
+      enum: ["Collected", "Pending", "Processing"],
+      default: "Collected",
+    },
     rating: {
       type: Number,
       default: 5.0,

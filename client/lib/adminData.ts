@@ -23,6 +23,8 @@ export interface AdminTrainer {
   clientsCount: number;
   rating: number;
   monthlyRevenueGenerated: number;
+  commissionRate: number; // Admin commission percentage e.g. 20%
+  commissionStatus: "Collected" | "Pending" | "Processing";
   status: "Active" | "On Leave";
 }
 
@@ -157,6 +159,8 @@ export const ADMIN_TRAINERS: AdminTrainer[] = [
     clientsCount: 24,
     rating: 4.9,
     monthlyRevenueGenerated: 14200,
+    commissionRate: 20,
+    commissionStatus: "Collected",
     status: "Active",
   },
   {
@@ -168,6 +172,8 @@ export const ADMIN_TRAINERS: AdminTrainer[] = [
     clientsCount: 30,
     rating: 5.0,
     monthlyRevenueGenerated: 15800,
+    commissionRate: 20,
+    commissionStatus: "Collected",
     status: "Active",
   },
   {
@@ -179,6 +185,8 @@ export const ADMIN_TRAINERS: AdminTrainer[] = [
     clientsCount: 18,
     rating: 4.8,
     monthlyRevenueGenerated: 11400,
+    commissionRate: 15,
+    commissionStatus: "Pending",
     status: "Active",
   },
   {
@@ -190,6 +198,8 @@ export const ADMIN_TRAINERS: AdminTrainer[] = [
     clientsCount: 22,
     rating: 4.9,
     monthlyRevenueGenerated: 9900,
+    commissionRate: 25,
+    commissionStatus: "Collected",
     status: "Active",
   },
 ];

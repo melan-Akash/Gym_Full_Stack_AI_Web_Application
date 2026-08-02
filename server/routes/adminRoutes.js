@@ -12,6 +12,7 @@ const {
   getAdminTrainers,
   createTrainerProfile,
   updateTrainerProfile,
+  updateTrainerCommission,
   deleteTrainerProfile,
   getMembershipPlans,
   createMembershipPlan,
@@ -44,6 +45,7 @@ router.patch("/members/:id/payment-status", updateMemberPaymentStatus);
 router.get("/trainers", getAdminTrainers);
 router.post("/trainers", createTrainerProfile);
 router.put("/trainers/:id", updateTrainerProfile);
+router.patch("/trainers/:id/commission", updateTrainerCommission);
 router.delete("/trainers/:id", deleteTrainerProfile);
 
 // Full CRUD for Membership Plans

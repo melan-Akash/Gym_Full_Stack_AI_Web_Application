@@ -28,7 +28,7 @@ const createWorkout = async (req, res) => {
       durationMinutes,
       targetMuscles,
       assignedTo: assignedTo || null,
-      createdBy: req.user._id,
+      createdBy: req.user?._id || req.user?.id || null,
       exercises: exercises || [],
     });
 

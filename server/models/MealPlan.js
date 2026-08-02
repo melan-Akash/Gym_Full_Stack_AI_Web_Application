@@ -14,7 +14,6 @@ const mealPlanSchema = new mongoose.Schema(
     },
     goal: {
       type: String,
-      enum: ["Bulking", "Cutting", "Maintenance"],
       default: "Maintenance",
     },
     calories: {
@@ -42,7 +41,7 @@ const mealPlanSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      default: null,
     },
     meals: [mealItemSchema],
   },

@@ -29,7 +29,7 @@ const createMealPlan = async (req, res) => {
       carbsGrams,
       fatsGrams,
       assignedTo: assignedTo || null,
-      createdBy: req.user._id,
+      createdBy: req.user?._id || req.user?.id || null,
       meals: meals || [],
     });
 

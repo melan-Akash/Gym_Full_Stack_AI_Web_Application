@@ -237,6 +237,9 @@ const createTrainerProfile = async (req, res) => {
       fullBio: fullBio || bio || "",
       experienceYears: Number(experienceYears) || 5,
       hourlyRate: Number(hourlyRate) || 75,
+      commissionRate: Number(req.body.commissionRate) || 20,
+      monthlyRevenueGenerated: Number(req.body.monthlyRevenueGenerated) || 12000,
+      commissionStatus: req.body.commissionStatus || "Collected",
       specializations: specializations
         ? (Array.isArray(specializations) ? specializations : specializations.split(",").map(s => s.trim()))
         : ["Bodybuilding", "Strength Training"],
@@ -290,6 +293,13 @@ const updateTrainerProfile = async (req, res) => {
       profileData.specializations = profileData.specializations.split(",").map(s => s.trim());
     }
 
+    if (profileData.commissionRate !== undefined) {
+      profileData.commissionRate = Number(profileData.commissionRate);
+    }
+    if (profileData.monthlyRevenueGenerated !== undefined) {
+      profileData.monthlyRevenueGenerated = Number(profileData.monthlyRevenueGenerated);
+    }
+
     // Update Profile fields
     const updatedProfile = await TrainerProfile.findByIdAndUpdate(id, profileData, { new: true }).populate(
       "user",
@@ -299,6 +309,38 @@ const updateTrainerProfile = async (req, res) => {
     res.json({
       success: true,
       message: "Trainer profile updated successfully",
+      data: updatedProfile,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update trainer commission rate or status
+// @route   PATCH /api/admin/trainers/:id/commission
+// @access  Private (Admin Only)
+const updateTrainerCommission = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { commissionRate, commissionStatus, monthlyRevenueGenerated } = req.body;
+
+    const updateFields = {};
+    if (commissionRate !== undefined) updateFields.commissionRate = Number(commissionRate);
+    if (commissionStatus !== undefined) updateFields.commissionStatus = commissionStatus;
+    if (monthlyRevenueGenerated !== undefined) updateFields.monthlyRevenueGenerated = Number(monthlyRevenueGenerated);
+
+    const updatedProfile = await TrainerProfile.findByIdAndUpdate(id, updateFields, { new: true }).populate(
+      "user",
+      "name email avatar phone status"
+    );
+
+    if (!updatedProfile) {
+      return res.status(404).json({ success: false, message: "Trainer profile not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Trainer commission settings updated",
       data: updatedProfile,
     });
   } catch (error) {
@@ -477,6 +519,7 @@ module.exports = {
   getAdminTrainers,
   createTrainerProfile,
   updateTrainerProfile,
+  updateTrainerCommission,
   deleteTrainerProfile,
   getMembershipPlans,
   createMembershipPlan,

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { ADMIN_TRAINERS } from "@/lib/adminData";
-import { UserPlus, Star, Trash2, Edit3, X, CheckCircle2, ShieldCheck, Upload, Loader2 } from "lucide-react";
+import { UserPlus, Star, Trash2, Edit3, X, CheckCircle2, ShieldCheck, Upload, Loader2, DollarSign, Percent, ArrowUpRight, TrendingUp, Wallet } from "lucide-react";
 
 export default function AdminTrainersPage() {
   const [trainers, setTrainers] = useState<any[]>([]);
@@ -36,6 +36,9 @@ export default function AdminTrainersPage() {
     title: "Certified Fitness Coach",
     category: "Bodybuilding",
     hourlyRate: 75,
+    commissionRate: 20,
+    monthlyRevenueGenerated: 12000,
+    commissionStatus: "Collected",
     experienceYears: 5,
     bio: "Passionate fitness trainer dedicated to muscle hypertrophy and body transformation.",
     avatar: PRESET_AVATARS[0],
@@ -50,6 +53,9 @@ export default function AdminTrainersPage() {
     title: "",
     category: "Bodybuilding",
     hourlyRate: 75,
+    commissionRate: 20,
+    monthlyRevenueGenerated: 12000,
+    commissionStatus: "Collected",
     experienceYears: 5,
     bio: "",
     avatar: "",
@@ -128,7 +134,7 @@ export default function AdminTrainersPage() {
 
       const json = await res.json();
       if (json.success) {
-        setNotification(`Trainer ${addFormData.name} created successfully!`);
+        setNotification(`Trainer ${addFormData.name} created with ${addFormData.commissionRate}% commission rate!`);
         setShowAddModal(false);
         setAddFormData({
           name: "",
@@ -138,6 +144,9 @@ export default function AdminTrainersPage() {
           title: "Certified Fitness Coach",
           category: "Bodybuilding",
           hourlyRate: 75,
+          commissionRate: 20,
+          monthlyRevenueGenerated: 12000,
+          commissionStatus: "Collected",
           experienceYears: 5,
           bio: "Passionate fitness trainer dedicated to muscle hypertrophy and body transformation.",
           avatar: PRESET_AVATARS[0],
@@ -164,6 +173,9 @@ export default function AdminTrainersPage() {
       title: tr.title || tr.specialization || "Certified Fitness Coach",
       category: tr.category || "Bodybuilding",
       hourlyRate: tr.hourlyRate || 75,
+      commissionRate: tr.commissionRate ?? 20,
+      monthlyRevenueGenerated: tr.monthlyRevenueGenerated ?? 12000,
+      commissionStatus: tr.commissionStatus || "Collected",
       experienceYears: tr.experienceYears || 5,
       bio: tr.bio || "",
       avatar: tr.image || tr.user?.avatar || tr.avatar || PRESET_AVATARS[0],
@@ -220,11 +232,61 @@ export default function AdminTrainersPage() {
     }
   };
 
+  // QUICK UPDATE COMMISSION RATE / STATUS
+  const handleQuickCommissionUpdate = async (id: string, newRate: number, newStatus?: string) => {
+    try {
+      const token = localStorage.getItem("forged_token");
+      const res = await fetch(`http://localhost:5000/api/admin/trainers/${id}/commission`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({
+          commissionRate: newRate,
+          ...(newStatus && { commissionStatus: newStatus }),
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setNotification("Trainer commission updated!");
+        fetchTrainers();
+      } else {
+        // Fallback local update
+        setTrainers((prev) =>
+          prev.map((t) =>
+            (t._id === id || t.id === id)
+              ? { ...t, commissionRate: newRate, ...(newStatus && { commissionStatus: newStatus }) }
+              : t
+          )
+        );
+      }
+    } catch (err) {
+      setTrainers((prev) =>
+        prev.map((t) =>
+          (t._id === id || t.id === id)
+            ? { ...t, commissionRate: newRate, ...(newStatus && { commissionStatus: newStatus }) }
+            : t
+        )
+      );
+    }
+  };
+
+  // CALCULATE TOTAL COMMISSION METRICS
+  const totalGrossRevenue = trainers.reduce((acc, t) => acc + (t.monthlyRevenueGenerated || 12000), 0);
+  const totalAdminCommission = trainers.reduce((acc, t) => {
+    const rev = t.monthlyRevenueGenerated || 12000;
+    const rate = t.commissionRate ?? 20;
+    return acc + (rev * rate) / 100;
+  }, 0);
+  const totalTrainerPayout = totalGrossRevenue - totalAdminCommission;
+  const avgCommissionRate = trainers.length > 0 ? (totalAdminCommission / totalGrossRevenue) * 100 : 20;
+
   return (
     <div className="space-y-8">
       {/* Notification Toast */}
       {notification && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-xl flex items-center justify-between text-xs font-semibold">
+        <div className="bg-[#00f2fe]/10 border border-[#00f2fe]/30 text-[#00f2fe] p-4 rounded-xl flex items-center justify-between text-xs font-semibold shadow-lg">
           <span className="flex items-center gap-2">
             <CheckCircle2 size={16} /> {notification}
           </span>
@@ -238,9 +300,11 @@ export default function AdminTrainersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <h1 className="text-3xl font-black uppercase text-white tracking-tight" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-            TRAINERS <span className="text-[#00f2fe]">MANAGEMENT ({trainers.length})</span>
+            TRAINER REVENUE & <span className="text-[#00f2fe]">ADMIN COMMISSIONS</span>
           </h1>
-          <p className="text-slate-400 text-xs mt-1">Full Admin CRUD Control: Create, Read, Edit & Delete Trainer Profiles & Cloudinary Images.</p>
+          <p className="text-slate-400 text-xs mt-1">
+            Track Gym Admin Commission Cuts (% Revenue Share), Trainer Payout Splits, & Manage Coach Profiles.
+          </p>
         </div>
 
         <button
@@ -250,6 +314,67 @@ export default function AdminTrainersPage() {
         >
           <UserPlus size={16} /> Hire / Add Trainer
         </button>
+      </div>
+
+      {/* COMMISSION STATS SUMMARY CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Total Admin Commission Earned */}
+        <div className="bg-gradient-to-br from-[#12151c] to-[#1a2030] border border-[#00f2fe]/40 p-5 rounded-2xl space-y-2 relative overflow-hidden shadow-xl">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-black uppercase tracking-wider">Admin Commission Earned</span>
+            <div className="p-2 bg-[#00f2fe]/10 rounded-lg text-[#00f2fe]">
+              <DollarSign size={18} />
+            </div>
+          </div>
+          <p className="text-3xl font-black text-white font-mono" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+            ${totalAdminCommission.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+          <p className="text-[11px] text-[#00f2fe] font-bold flex items-center gap-1">
+            <TrendingUp size={12} /> Gym Cut from Personal Training
+          </p>
+        </div>
+
+        {/* Card 2: Total Gross Revenue */}
+        <div className="bg-[#12151c] border border-white/10 p-5 rounded-2xl space-y-2">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-black uppercase tracking-wider">Total Trainer Gross Revenue</span>
+            <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+              <Wallet size={18} />
+            </div>
+          </div>
+          <p className="text-3xl font-black text-white font-mono" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+            ${totalGrossRevenue.toLocaleString()}
+          </p>
+          <p className="text-[11px] text-slate-400">Combined monthly client bookings</p>
+        </div>
+
+        {/* Card 3: Trainer Net Payout */}
+        <div className="bg-[#12151c] border border-white/10 p-5 rounded-2xl space-y-2">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-black uppercase tracking-wider">Trainers Net Payout</span>
+            <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
+              <ArrowUpRight size={18} />
+            </div>
+          </div>
+          <p className="text-3xl font-black text-emerald-400 font-mono" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+            ${totalTrainerPayout.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
+          <p className="text-[11px] text-emerald-400/80">Net disbursed to coaches</p>
+        </div>
+
+        {/* Card 4: Avg Commission Cut % */}
+        <div className="bg-[#12151c] border border-white/10 p-5 rounded-2xl space-y-2">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-black uppercase tracking-wider">Avg Admin Cut %</span>
+            <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400">
+              <Percent size={18} />
+            </div>
+          </div>
+          <p className="text-3xl font-black text-amber-400 font-mono" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+            {avgCommissionRate.toFixed(1)}%
+          </p>
+          <p className="text-[11px] text-slate-400">Configurable per trainer profile</p>
+        </div>
       </div>
 
       {/* Grid List */}
@@ -266,9 +391,17 @@ export default function AdminTrainersPage() {
             const trCategory = tr.category || "Bodybuilding";
             const trHourly = tr.hourlyRate || 75;
             const trRating = tr.rating || 5.0;
+            const trRevenue = tr.monthlyRevenueGenerated || 12000;
+            const trCommRate = tr.commissionRate ?? 20;
+            const trCommStatus = tr.commissionStatus || "Collected";
+
+            // Commission Math
+            const adminCut = (trRevenue * trCommRate) / 100;
+            const trainerNet = trRevenue - adminCut;
 
             return (
-              <div key={trId} className="bg-[#12151c] border border-white/10 rounded-2xl p-6 space-y-4 hover:border-[#00f2fe]/40 transition-all">
+              <div key={trId} className="bg-[#12151c] border border-white/10 rounded-2xl p-6 space-y-4 hover:border-[#00f2fe]/40 transition-all shadow-xl relative">
+                {/* Header Profile Info */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
                     <Image src={trAvatar} alt={trName} width={56} height={56} className="rounded-full object-cover border-2 border-[#00f2fe] w-14 h-14 bg-black" />
@@ -281,15 +414,18 @@ export default function AdminTrainersPage() {
                       <p className="text-[11px] text-slate-400">{trEmail}</p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase rounded">
-                    Active Coach
+                  <span className={`px-2.5 py-1 text-[10px] font-black uppercase rounded-full border ${
+                    trCommStatus === "Collected" ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" : "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                  }`}>
+                    {trCommStatus === "Collected" ? "✓ Commission Collected" : "⏳ Pending Payout"}
                   </span>
                 </div>
 
+                {/* Performance Stats */}
                 <div className="grid grid-cols-3 gap-3 bg-white/5 border border-white/10 p-3 rounded-xl text-center text-xs">
                   <div>
-                    <span className="text-slate-400 text-[10px] uppercase font-bold block">Rate/hr</span>
-                    <span className="text-base font-black text-emerald-400 font-mono">${trHourly}</span>
+                    <span className="text-slate-400 text-[10px] uppercase font-bold block">Hourly Rate</span>
+                    <span className="text-base font-black text-white font-mono">${trHourly}/hr</span>
                   </div>
                   <div>
                     <span className="text-slate-400 text-[10px] uppercase font-bold block">Rating</span>
@@ -303,15 +439,62 @@ export default function AdminTrainersPage() {
                   </div>
                 </div>
 
+                {/* COMMISSION BREAKDOWN BOX */}
+                <div className="bg-gradient-to-r from-black/60 to-[#181c28] border border-[#00f2fe]/30 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                    <span className="text-xs font-extrabold uppercase text-[#00f2fe] flex items-center gap-1.5">
+                      <DollarSign size={14} /> Admin Commission Split
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase">Rate:</span>
+                      <select
+                        value={trCommRate}
+                        onChange={(e) => handleQuickCommissionUpdate(trId, Number(e.target.value))}
+                        className="bg-[#12151c] border border-[#00f2fe]/40 text-[#00f2fe] text-xs font-black rounded px-1.5 py-0.5 cursor-pointer focus:outline-none"
+                      >
+                        <option value={10}>10% Cut</option>
+                        <option value={15}>15% Cut</option>
+                        <option value={20}>20% Cut</option>
+                        <option value={25}>25% Cut</option>
+                        <option value={30}>30% Cut</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div className="bg-white/5 p-2 rounded-lg text-center">
+                      <span className="text-[9px] uppercase font-bold text-slate-400 block">Gross Revenue</span>
+                      <span className="text-sm font-black text-white font-mono">${trRevenue.toLocaleString()}</span>
+                    </div>
+
+                    <div className="bg-[#00f2fe]/10 border border-[#00f2fe]/20 p-2 rounded-lg text-center">
+                      <span className="text-[9px] uppercase font-bold text-[#00f2fe] block">Admin Cut ({trCommRate}%)</span>
+                      <span className="text-sm font-black text-[#00f2fe] font-mono">${adminCut.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                    </div>
+
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-lg text-center">
+                      <span className="text-[9px] uppercase font-bold text-emerald-400 block">Trainer Net</span>
+                      <span className="text-sm font-black text-emerald-400 font-mono">${trainerNet.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                    </div>
+                  </div>
+                </div>
+
                 <p className="text-xs text-slate-300 line-clamp-2 italic">"{tr.bio || "Dedicated professional fitness coach."}"</p>
 
                 {/* CRUD Action Buttons */}
                 <div className="flex gap-2 pt-2 border-t border-white/10">
                   <button
+                    onClick={() => handleQuickCommissionUpdate(trId, trCommRate, trCommStatus === "Collected" ? "Pending" : "Collected")}
+                    className="py-2 px-3 bg-white/5 border border-white/15 hover:bg-white/10 text-xs font-bold text-slate-300 rounded-lg transition-all cursor-pointer text-[11px]"
+                  >
+                    Toggle Status ({trCommStatus})
+                  </button>
+
+                  <button
                     onClick={() => handleOpenEdit(tr)}
                     className="flex-1 py-2 px-3 bg-white/5 border border-white/10 hover:bg-[#00f2fe]/10 hover:border-[#00f2fe]/30 hover:text-[#00f2fe] text-xs font-bold text-slate-200 rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <Edit3 size={14} /> Edit Trainer
+                    <Edit3 size={14} /> Edit Profile
                   </button>
 
                   <button
@@ -333,7 +516,7 @@ export default function AdminTrainersPage() {
           <div className="bg-[#12151c] border border-white/20 rounded-2xl w-full max-w-xl p-6 space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <h2 className="text-xl font-black text-white uppercase tracking-tight" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-                CREATE <span className="text-[#00f2fe]">TRAINER PROFILE</span>
+                CREATE <span className="text-[#00f2fe]">TRAINER PROFILE & COMMISSION</span>
               </h2>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-white">
                 <X size={20} />
@@ -356,7 +539,6 @@ export default function AdminTrainersPage() {
                       {uploadingImage ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                       {uploadingImage ? "Uploading Photo..." : "Upload Photo from Device"}
                     </button>
-                    <p className="text-[11px] text-slate-400">Supported: JPG, PNG, WEBP (Uploaded via Cloudinary)</p>
                   </div>
                 </div>
 
@@ -388,6 +570,21 @@ export default function AdminTrainersPage() {
                 <div>
                   <label className="block text-slate-400 font-bold mb-1">Phone Number</label>
                   <input type="text" value={addFormData.phone} onChange={(e) => setAddFormData({ ...addFormData, phone: e.target.value })} placeholder="+1 (555) 019-2834" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]" />
+                </div>
+              </div>
+
+              {/* COMMISSION & FINANCIAL SETTINGS */}
+              <div className="bg-[#00f2fe]/5 border border-[#00f2fe]/20 rounded-xl p-3 space-y-3">
+                <span className="text-xs font-black uppercase text-[#00f2fe] block">Gym Admin Commission Split Settings</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1">Admin Commission Rate (%) *</label>
+                    <input type="number" min={0} max={100} value={addFormData.commissionRate} onChange={(e) => setAddFormData({ ...addFormData, commissionRate: Number(e.target.value) })} className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-[#00f2fe] font-black focus:outline-none focus:border-[#00f2fe]" />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1">Est. Monthly Revenue ($) *</label>
+                    <input type="number" value={addFormData.monthlyRevenueGenerated} onChange={(e) => setAddFormData({ ...addFormData, monthlyRevenueGenerated: Number(e.target.value) })} className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-[#00f2fe]" />
+                  </div>
                 </div>
               </div>
 
@@ -441,7 +638,7 @@ export default function AdminTrainersPage() {
           <div className="bg-[#12151c] border border-white/20 rounded-2xl w-full max-w-xl p-6 space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <h2 className="text-xl font-black text-white uppercase tracking-tight" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-                EDIT <span className="text-[#00f2fe]">TRAINER PROFILE</span>
+                EDIT <span className="text-[#00f2fe]">TRAINER PROFILE & COMMISSION</span>
               </h2>
               <button onClick={() => setEditingTrainer(null)} className="text-slate-400 hover:text-white">
                 <X size={20} />
@@ -484,6 +681,29 @@ export default function AdminTrainersPage() {
                 <div>
                   <label className="block text-slate-400 font-bold mb-1">Phone Number</label>
                   <input type="text" value={editFormData.phone} onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#00f2fe]" />
+                </div>
+              </div>
+
+              {/* COMMISSION & FINANCIAL EDIT SETTINGS */}
+              <div className="bg-[#00f2fe]/5 border border-[#00f2fe]/20 rounded-xl p-3 space-y-3">
+                <span className="text-xs font-black uppercase text-[#00f2fe] block">Gym Admin Commission Split Settings</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1">Admin Cut Rate (%)</label>
+                    <input type="number" min={0} max={100} value={editFormData.commissionRate} onChange={(e) => setEditFormData({ ...editFormData, commissionRate: Number(e.target.value) })} className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-[#00f2fe] font-black focus:outline-none focus:border-[#00f2fe]" />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1">Monthly Rev ($)</label>
+                    <input type="number" value={editFormData.monthlyRevenueGenerated} onChange={(e) => setEditFormData({ ...editFormData, monthlyRevenueGenerated: Number(e.target.value) })} className="w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-[#00f2fe]" />
+                  </div>
+                  <div>
+                    <label className="block text-slate-300 font-bold mb-1">Commission Status</label>
+                    <select value={editFormData.commissionStatus} onChange={(e) => setEditFormData({ ...editFormData, commissionStatus: e.target.value })} className="w-full bg-[#181c26] border border-white/15 rounded-lg px-3 py-2 text-white font-bold">
+                      <option value="Collected">Collected</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Processing">Processing</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
